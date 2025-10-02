@@ -1,0 +1,10 @@
+<div id="output"></div>
+<script>
+async function checkAudio(file) {
+  let form = new FormData();
+  form.append("file", file);
+  let res = await fetch("http://localhost:8000/analyze/", {method: "POST", body: form});
+  let data = await res.json();
+  document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+}
+</script>
