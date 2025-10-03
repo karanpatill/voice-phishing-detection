@@ -5,6 +5,8 @@ import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 import os
 import uuid
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # ----------------------------
 # Supabase Setup
@@ -28,9 +30,17 @@ bert_model = DistilBertForSequenceClassification.from_pretrained(
 # ----------------------------
 app = FastAPI()
 
+WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "web")
+
+if not os.path.exists(WEB_DIR):
+    raise RuntimeError(f"Directory '{WEB_DIR}' does not exist")
+
+# Serve static files like JS/CSS/images
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
 @app.get("/")
 async def root():
-    return {"message": "Voice Phishing Detection API - Chunk Mode"}
+    return FileResponse(os.path.join(WEB_DIR, "index.html"))
 
 @app.post("/upload_chunk/")
 async def upload_chunk(

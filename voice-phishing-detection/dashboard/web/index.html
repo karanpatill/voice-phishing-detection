@@ -1,10 +1,74 @@
-<div id="output"></div>
-<script>
-async function checkAudio(file) {
-  let form = new FormData();
-  form.append("file", file);
-  let res = await fetch("http://localhost:8000/analyze/", {method: "POST", body: form});
-  let data = await res.json();
-  document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-}
-</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voice Phishing Detection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        input, button { margin: 10px 0; padding: 8px; }
+        #results { margin-top: 20px; }
+        .chunk-result { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Voice Phishing Detection</h1>
+    
+    <label for="callId">Call ID:</label>
+    <input type="text" id="callId" placeholder="Enter Call ID" /><br>
+
+    <label for="chunkNumber">Chunk Number:</label>
+    <input type="number" id="chunkNumber" value="0" /><br>
+
+    <label for="audioFile">Select Audio Chunk (.wav):</label>
+    <input type="file" id="audioFile" accept=".wav" /><br>
+
+    <button onclick="uploadChunk()">Upload & Analyze</button>
+
+    <div id="results"></div>
+
+    <script>
+        async function uploadChunk() {
+            const callId = document.getElementById("callId").value;
+            const chunkNumber = document.getElementById("chunkNumber").value;
+            const fileInput = document.getElementById("audioFile");
+
+            if (!callId || !fileInput.files.length) {
+                alert("Please provide Call ID and select a file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("call_id", callId);
+            formData.append("chunk_number", chunkNumber);
+
+            try {
+                const res = await fetch("/upload_chunk/", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+
+                const resultsDiv = document.getElementById("results");
+                const chunkDiv = document.createElement("div");
+                chunkDiv.className = "chunk-result";
+                chunkDiv.innerHTML = `
+                    <strong>Chunk #${data.chunk_number}</strong><br>
+                    Transcript: ${data.transcript}<br>
+                    Prediction: Normal ${data.prediction.normal.toFixed(2)}, Phishing ${data.prediction.phishing.toFixed(2)}<br>
+                    Audio URL: <a href="${data.file_url}" target="_blank">Listen</a>
+                `;
+                resultsDiv.appendChild(chunkDiv);
+
+                // Increment chunk number for next upload
+                document.getElementById("chunkNumber").value = parseInt(chunkNumber) + 1;
+
+            } catch (err) {
+                console.error(err);
+                alert("Error uploading chunk.");
+            }
+        }
+    </script>
+</body>
+</html>
