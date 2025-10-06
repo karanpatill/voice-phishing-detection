@@ -2,212 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Live Demo — Voice Phishing Detection</title>
+  <title>Voice Phishing Detection — File Upload</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#071021; color:#e6eef6; font-family: Inter, system-ui, sans-serif; padding: 30px; }
     .panel { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 18px; box-shadow: 0 6px 30px rgba(0,0,0,0.6); }
-    .controls { display:flex; gap:12px; align-items:center; }
     #results { margin-top:18px; max-height:380px; overflow:auto; }
-    .chunk-card { background:#0f1720; border-left:4px solid #00ffc3; padding:12px; border-radius:8px; margin-bottom:10px; }
-    .status { font-weight:700; margin-left:8px; }
-    .progress-wrap { display:flex; gap:8px; align-items:center; margin-top:8px; }
-    .progress { height:9px; background:#18202a; border-radius:6px; width:60%; }
-    .progress-bar { background:#ff6b6b; }
-    .small { font-size:0.85rem; color:#b7c6d6; }
+    .result-card { background:#0f1720; border-left:4px solid #00ffc3; padding:12px; border-radius:8px; margin-bottom:10px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="panel">
-      <h3 style="color:#00ffc3">Live Call Demo</h3>
-      <p class="small">This will record microphone audio in 5s chunks and upload automatically to your backend. Use Call ID to group chunks.</p>
+      <h3 style="color:#00ffc3">Upload Audio File</h3>
+      <p>Select a WAV file to get the phishing detection prediction.</p>
 
       <div class="mb-3">
         <label class="form-label">Call ID</label>
         <input id="callId" class="form-control" placeholder="call_demo_001" value="call_demo_001" />
       </div>
 
-      <div class="controls mb-3">
-        <button id="startBtn" class="btn btn-success">Start Live</button>
-        <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
-        <div style="margin-left:auto;">
-          <label class="form-label small">Chunk duration</label><br>
-          <select id="chunkDuration" class="form-select form-select-sm" style="width:120px;">
-            <option value="3000">3s</option>
-            <option value="5000" selected>5s</option>
-            <option value="8000">8s</option>
-          </select>
-        </div>
+      <div class="mb-3">
+        <input type="file" id="audioFile" accept=".wav,.mp3,.ogg,.webm" class="form-control" />
       </div>
 
-      <div id="liveStatus" class="small">Status: <span id="liveState" style="color:#9be7c4">idle</span></div>
+      <button id="uploadBtn" class="btn btn-primary">Upload & Predict</button>
 
       <div id="results"></div>
     </div>
   </div>
 
 <script>
-/*
-Client-side live recorder:
-- Uses MediaRecorder to capture mic
-- Creates chunks of audio every `chunkDuration` ms
-- Posts each chunk to /upload_chunk/ as form-data with call_id & chunk_number
-- Prepends response into results area
-- NOTE: MediaRecorder MIME often "audio/webm" or "audio/ogg" — backend ffmpeg will convert
-*/
-
-let mediaRecorder = null;
-let chunkCount = 0;
-let callIdInput = document.getElementById('callId');
+const uploadBtn = document.getElementById('uploadBtn');
+const audioFileInput = document.getElementById('audioFile');
 const resultsDiv = document.getElementById('results');
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const liveState = document.getElementById('liveState');
-const chunkDurationSelect = document.getElementById('chunkDuration');
+const callIdInput = document.getElementById('callId');
 
-startBtn.onclick = async () => {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert('getUserMedia not supported in this browser');
+uploadBtn.onclick = async () => {
+  const file = audioFileInput.files[0];
+  if (!file) {
+    alert("Please select an audio file first!");
     return;
   }
+  const callId = callIdInput.value || "call_demo_001";
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    const mimeType = getSupportedMimeType();
-    mediaRecorder = new MediaRecorder(stream, { mimeType });
-
-    const chunkDuration = parseInt(chunkDurationSelect.value, 10);
-    chunkCount = 0;
-
-    mediaRecorder.ondataavailable = async (e) => {
-      if (!e.data || e.data.size === 0) return;
-      // Build a filename with extension according to mime type
-      const ext = mimeType.includes('webm') ? 'webm' : mimeType.includes('ogg') ? 'ogg' : 'wav';
-      const filename = `${callIdInput.value || 'call'}_${chunkCount}.${ext}`;
-
-      // Upload to backend
-       chunkCount += 1;
-      await uploadChunkBlob(e.data, filename, chunkCount);
-
-     
-    };
-
-    mediaRecorder.onstart = () => {
-      liveState.textContent = 'recording';
-      liveState.style.color = '#9be7c4';
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-    };
-
-    mediaRecorder.onstop = () => {
-      liveState.textContent = 'idle';
-      liveState.style.color = '#f0ad4e';
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-    };
-
-    // start with the specified timeslice so ondataavailable fires every chunkDuration ms
-    mediaRecorder.start(chunkDuration); // timeslice in ms
-    liveState.textContent = 'recording';
-    liveState.style.color = '#9be7c4';
-
-  } catch (err) {
-    console.error('Microphone access denied', err);
-    alert('Could not access microphone: ' + err.message);
-  }
-};
-
-stopBtn.onclick = () => {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
-    // stop all tracks to free mic
-    mediaRecorder.stream.getTracks().forEach(t => t.stop());
-  }
-};
-
-// Determine a supported audio mime
-function getSupportedMimeType() {
-  const types = [
-    'audio/webm;codecs=opus',
-    'audio/ogg;codecs=opus',
-    'audio/webm',
-    'audio/ogg'
-  ];
-  for (const t of types) {
-    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
-  }
-  return ''; // browser default
-}
-
-async function uploadChunkBlob(blob, filename, chunkNumber) {
-  const callId = callIdInput.value || 'call_demo';
   const form = new FormData();
-  form.append('file', blob, filename);
+  form.append('file', file);
   form.append('call_id', callId);
-  form.append('chunk_number', chunkNumber);
+  form.append('chunk_number', 0); // single file, chunk_number = 0
 
-  // Visual placeholder card while backend responds
-  const placeholder = createPlaceholderCard(chunkNumber);
-  resultsDiv.prepend(placeholder);
+  // Show a placeholder card
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `<strong>Processing ${file.name}...</strong>`;
+  resultsDiv.prepend(card);
 
   try {
     const resp = await fetch('/upload_chunk/', { method: 'POST', body: form });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      throw new Error(`Upload failed: ${resp.status} ${txt}`);
-    }
     const data = await resp.json();
-    // update placeholder with actual content
-    fillCardWithResponse(placeholder, data);
+
+    if (data.error) {
+      card.innerHTML = `<strong>Error:</strong> ${data.error}`;
+      return;
+    }
+
+    const normalPct = (data.prediction.normal * 100).toFixed(1);
+    const phishingPct = (data.prediction.phishing * 100).toFixed(1);
+
+    let color = '#00e676';
+    if (data.prediction.phishing > 0.6) color = '#ff4c4c';
+    else if (data.prediction.phishing > 0.3) color = '#ffb74d';
+
+    card.innerHTML = `
+      <div><strong>Call ID:</strong> ${data.call_id}</div>
+      <div><strong>Transcript:</strong> ${escapeHtml(data.transcript)}</div>
+      <div><strong>Prediction:</strong> <span style="color:${color}">${phishingPct}% Phishing</span></div>
+      <div style="margin-top:5px;"><a href="${data.file_url}" target="_blank" style="color:#9be7c4">🔊 Listen</a></div>
+    `;
+
   } catch (err) {
-    console.error('Upload error', err);
-    placeholder.querySelector('.card-body').innerHTML = `<div style="color:#ff6b6b">Error: ${err.message}</div>`;
+    card.innerHTML = `<strong>Error uploading file:</strong> ${err.message}`;
+    console.error(err);
   }
-}
+};
 
-function createPlaceholderCard(chunkNumber) {
-  const card = document.createElement('div');
-  card.className = 'chunk-card';
-  card.innerHTML = `
-    <div class="d-flex justify-content-between align-items-center">
-      <div><strong>Chunk #${chunkNumber}</strong></div>
-      <div class="small">processing…</div>
-    </div>
-    <div class="card-body small" style="margin-top:10px">Waiting for backend response...</div>
-  `;
-  return card;
-}
-
-function fillCardWithResponse(card, data) {
-  const normalPct = (data.prediction.normal * 100).toFixed(1);
-  const phishingPct = (data.prediction.phishing * 100).toFixed(1);
-  // color state: green <30, yellow 30-60, red >60 (tweak as required)
-  let color = '#00e676'; // green
-  if (data.prediction.phishing > 0.6) color = '#ff4c4c';
-  else if (data.prediction.phishing > 0.3) color = '#ffb74d';
-
-  card.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div><strong>Chunk #${data.chunk_number}</strong> <span class="small">(${new Date().toLocaleTimeString()})</span></div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <div style="font-weight:700; color:${color}">${phishingPct}% Phishing</div>
-      </div>
-    </div>
-    <div class="card-body small" style="margin-top:10px">
-      <div><em>Transcript:</em> ${escapeHtml(data.transcript)}</div>
-      <div class="progress-wrap">
-        <div class="progress" style="width:65%;"><div class="progress-bar" style="width:${normalPct}% ; background:#00aaff;"></div></div>
-        <div class="progress" style="width:30%;"><div class="progress-bar" style="width:${phishingPct}% ; background:#ff4c4c;"></div></div>
-      </div>
-      <div style="margin-top:8px;">
-        <a href="${data.file_url}" target="_blank" class="small" style="color:#9be7c4">🔊 Listen</a>
-      </div>
-    </div>
-  `;
-}
-
-// basic HTML-escape helper
 function escapeHtml(s) {
   if (!s) return '';
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
