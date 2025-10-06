@@ -87,9 +87,10 @@ startBtn.onclick = async () => {
       const filename = `${callIdInput.value || 'call'}_${chunkCount}.${ext}`;
 
       // Upload to backend
+       chunkCount += 1;
       await uploadChunkBlob(e.data, filename, chunkCount);
 
-      chunkCount += 1;
+     
     };
 
     mediaRecorder.onstart = () => {

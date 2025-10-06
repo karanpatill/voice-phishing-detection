@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, Form
 from supabase import create_client, Client
 import whisper
 import torch
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification # type: ignore
 import os
 import uuid
 from fastapi.responses import FileResponse
@@ -20,10 +20,9 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ----------------------------
 whisper_model = whisper.load_model("base")
 
-tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-bert_model = DistilBertForSequenceClassification.from_pretrained(
-    "distilbert-base-uncased", num_labels=2
-)
+
+tokenizer = DistilBertTokenizer.from_pretrained("./classifier/saved_model")
+bert_model = DistilBertForSequenceClassification.from_pretrained("./classifier/saved_model")
 
 # ----------------------------
 # FastAPI App
@@ -75,7 +74,7 @@ async def upload_chunk(
 
     # Step 4: Classify with DistilBERT
     inputs = tokenizer(transcript, return_tensors="pt", truncation=True)
-    outputs = bert_model(**inputs)
+    outputs = bert_model(**inputs) # type: ignore
     probs = torch.softmax(outputs.logits, dim=1)
     normal_score = float(probs[0][0])
     phishing_score = float(probs[0][1])
