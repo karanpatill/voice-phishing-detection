@@ -80,7 +80,7 @@ class VoicePhishingDetectionSystem:
             return False
         
         try:
-            self.recorder.stop_call_recording()  # type: ignore
+            self.recorder.stop_call_recording() # type: ignore
             print(f"✅ Monitoring stopped for call: {self.current_call}")
             self.current_call = None
             return True
@@ -103,14 +103,14 @@ class VoicePhishingDetectionSystem:
     
     def run_interactive_mode(self):
         """Run system in interactive mode"""
-        print("\n🎮 Interactive Mode Started")
+        print("\\n🎮 Interactive Mode Started")
         print("Commands:")
         print("  start [call_id] - Start monitoring (optional call_id)")
         print("  stop           - Stop current monitoring")
         print("  status         - Show system status")
         print("  help           - Show this help")
         print("  quit           - Exit system")
-        print("\nType 'help' for commands or 'quit' to exit\n")
+        print("\\nType 'help' for commands or 'quit' to exit\\n")
         
         self.is_running = True
         
@@ -147,12 +147,12 @@ class VoicePhishingDetectionSystem:
                     print(f"❌ Unknown command: {cmd}. Type 'help' for available commands.")
                     
             except KeyboardInterrupt:
-                print("\n⏹️  Interrupted by user")
+                print("\\n⏹️  Interrupted by user")
                 self.shutdown()
                 break
                 
             except EOFError:
-                print("\n🛑 End of input")
+                print("\\n🛑 End of input")
                 self.shutdown()
                 break
                 
@@ -183,7 +183,7 @@ class VoicePhishingDetectionSystem:
                         time.sleep(1)
                         
             except KeyboardInterrupt:
-                print("\n⏹️  Interrupted by user")
+                print("\\n⏹️  Interrupted by user")
             
             finally:
                 self.stop_monitoring()
@@ -192,7 +192,7 @@ class VoicePhishingDetectionSystem:
     
     def print_status(self, status):
         """Print formatted status information"""
-        print("\n📊 System Status:")
+        print("\\n📊 System Status:")
         print("-" * 30)
         print(f"System: {status['status']}")
         
@@ -208,11 +208,11 @@ class VoicePhishingDetectionSystem:
                 print(f"WebSocket: {'Connected' if rs['ws_connected'] else 'Disconnected'}")
                 print(f"Buffer Size: {rs['buffer_size']} samples")
         
-        print("-" * 30 + "\n")
+        print("-" * 30 + "\\n")
     
     def print_help(self):
         """Print help information"""
-        print("\n📖 Available Commands:")
+        print("\\n📖 Available Commands:")
         print("-" * 40)
         print("start [call_id]  - Start call monitoring")
         print("                   Optional call_id (auto-generated if not provided)")
@@ -221,12 +221,12 @@ class VoicePhishingDetectionSystem:
         print("help             - Show this help message")
         print("quit/exit/q      - Exit the system")
         print("-" * 40)
-        print("\n💡 Tips:")
+        print("\\n💡 Tips:")
         print("- Start Linphone and make/receive calls")
         print("- System will automatically detect and analyze speech")
         print("- Open http://127.0.0.1:8000/static/realtime.html for web dashboard")
         print("- Phishing alerts will be shown in real-time")
-        print("-" * 40 + "\n")
+        print("-" * 40 + "\\n")
     
     def shutdown(self):
         """Shutdown the system cleanly"""
@@ -244,7 +244,7 @@ class VoicePhishingDetectionSystem:
     
     def signal_handler(self, signum, frame):
         """Handle system signals"""
-        print(f"\n🔔 Received signal {signum}")
+        print(f"\\n🔔 Received signal {signum}")
         self.shutdown()
         sys.exit(0)
 
