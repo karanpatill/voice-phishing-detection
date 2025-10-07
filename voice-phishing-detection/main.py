@@ -271,7 +271,7 @@ Examples:
     parser.add_argument(
         '--chunk-duration',
         type=int,
-        default=10,
+        default=5,
         help='Audio chunk duration in seconds (default: 10)'
     )
     

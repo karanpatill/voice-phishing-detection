@@ -3,375 +3,594 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔴 Real-time Call Monitor - Voice Phishing Detection</title>
+    <title>�️ Voice Phishing Detection - Real-time Monitor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-bg: #0f0f23;
+            --secondary-bg: #1a1a35;
+            --card-bg: #25253f;
+            --accent-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #374151;
+            --glow-color: rgba(99, 102, 241, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #071021 0%, #0d1830 100%);
-            color: #e6eef6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
+            overflow-x: hidden;
         }
-        
+
+        /* Animated Background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+        }
+
         .header {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 20px 0;
+            background: rgba(37, 37, 63, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        .call-status {
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-decoration: none;
         }
-        
-        .call-status.active {
-            border-left: 4px solid #00d4aa;
-            background: rgba(0, 212, 170, 0.1);
-        }
-        
-        .call-status.inactive {
-            border-left: 4px solid #666;
-            background: rgba(102, 102, 102, 0.1);
-        }
-        
-        .live-indicator {
-            color: #ff4c4c;
-            animation: pulse 2s infinite;
-            font-weight: bold;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        
-        .alert-high {
-            background: rgba(255, 76, 76, 0.2);
-            border: 1px solid rgba(255, 76, 76, 0.5);
-            border-left: 4px solid #ff4c4c;
-        }
-        
-        .alert-medium {
-            background: rgba(255, 183, 77, 0.2);
-            border: 1px solid rgba(255, 183, 77, 0.5);
-            border-left: 4px solid #ffb74d;
-        }
-        
-        .transcript-item {
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.03);
-            border-left: 3px solid #00d4aa;
-            transition: all 0.3s ease;
-        }
-        
-        .transcript-item:hover {
-            background: rgba(255,255,255,0.08);
-            transform: translateX(5px);
-        }
-        
-        .phishing-score {
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-        
-        .score-low { background: rgba(0, 212, 170, 0.2); color: #00d4aa; }
-        .score-medium { background: rgba(255, 183, 77, 0.2); color: #ffb74d; }
-        .score-high { background: rgba(255, 76, 76, 0.2); color: #ff4c4c; }
-        
-        .stats-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .stats-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #00d4aa;
-        }
-        
-        .connection-status {
+
+        .status-indicator {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            z-index: 1000;
-        }
-        
-        .connected {
-            background: rgba(0, 212, 170, 0.2);
-            color: #00d4aa;
-            border: 1px solid #00d4aa;
-        }
-        
-        .disconnected {
-            background: rgba(255, 76, 76, 0.2);
-            color: #ff4c4c;
-            border: 1px solid #ff4c4c;
-        }
-        
-        .control-panel {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .btn-custom {
-            background: rgba(0, 212, 170, 0.2);
-            border: 1px solid #00d4aa;
-            color: #00d4aa;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            z-index: 101;
+            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
-        
-        .btn-custom:hover {
-            background: #00d4aa;
-            color: #071021;
+
+        .status-connected {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
         }
-        
-        .btn-danger-custom {
-            background: rgba(255, 76, 76, 0.2);
-            border: 1px solid #ff4c4c;
-            color: #ff4c4c;
+
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
         }
-        
-        .btn-danger-custom:hover {
-            background: #ff4c4c;
+
+        .status-connecting {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        /* Cards */
+        .card-modern {
+            background: rgba(37, 37, 63, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-modern {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #5b21b6 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
             color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
-        
-        .scrollable {
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-stop:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .form-control-modern {
+            background: rgba(55, 65, 81, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-control-modern:focus {
+            background: rgba(55, 65, 81, 0.8);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            outline: none;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(37, 37, 63, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Live Transcript Section */
+        .transcript-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: rgba(15, 15, 35, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .transcript-item {
+            background: rgba(37, 37, 63, 0.8);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent-color);
+            animation: slideInRight 0.5s ease;
+            transition: all 0.3s ease;
+        }
+
+        .transcript-item:hover {
+            transform: translateX(5px);
+            background: rgba(37, 37, 63, 1);
+        }
+
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .chunk-number {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .transcript-text {
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Phishing Score Bar */
+        .phishing-score-container {
+            margin-top: 1rem;
+        }
+
+        .score-label {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .score-percentage {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .progress-bar-container {
+            background: rgba(55, 65, 81, 0.3);
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: all 0.8s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .score-low {
+            
+            color: var(--success-color);
+        }
+
+        .score-medium {
+            
+            color: var(--warning-color);
+        }
+
+        .score-high {
+            
+            color: var(--danger-color);
+        }
+
+        /* Alert Notifications */
+        .alert-container {
             max-height: 400px;
             overflow-y: auto;
         }
-        
-        .scrollable::-webkit-scrollbar {
+
+        .alert-item {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-left: 4px solid var(--danger-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            animation: alertPulse 0.5s ease;
+        }
+
+        .alert-medium {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            border-left-color: var(--warning-color);
+        }
+
+        .alert-high {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            border-left-color: var(--danger-color);
+        }
+
+        @keyframes alertPulse {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .live-indicator {
+            color: var(--danger-color);
+            animation: pulse 2s infinite;
+        }
+
+        /* Scrollbar Styling */
+        .transcript-container::-webkit-scrollbar,
+        .alert-container::-webkit-scrollbar {
             width: 6px;
         }
-        
-        .scrollable::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.05);
+
+        .transcript-container::-webkit-scrollbar-track,
+        .alert-container::-webkit-scrollbar-track {
+            background: rgba(55, 65, 81, 0.2);
+            border-radius: 10px;
         }
-        
-        .scrollable::-webkit-scrollbar-thumb {
-            background: rgba(0, 212, 170, 0.5);
-            border-radius: 3px;
+
+        .transcript-container::-webkit-scrollbar-thumb,
+        .alert-container::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
         }
-        
-        .alert-notification {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            max-width: 350px;
-            z-index: 1001;
-            animation: slideIn 0.5s ease;
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .control-panel {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card-modern {
+                padding: 1rem;
+            }
         }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
         }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
     </style>
 </head>
 <body>
-    <div class="connection-status" id="connectionStatus">
-        <i class="fas fa-circle"></i> Connecting...
+    <div class="bg-animated"></div>
+    
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="status-indicator status-disconnected">
+        <i class="fas fa-circle me-2"></i>
+        <span id="statusText">Disconnected</span>
     </div>
 
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h2><i class="fas fa-shield-alt"></i> Real-time Call Monitor</h2>
-                        <p class="mb-0">Voice Phishing Detection System</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div id="systemTime" class="h5 mb-0"></div>
-                    </div>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <a href="#" class="logo text-decoration-none">
+                        <i class="fas fa-shield-alt me-2"></i>Voice Phishing Detection
+                    </a>
+                    <p class="mb-0 mt-1" style="color: var(--text-secondary);">Real-time Call Monitoring & Analysis</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div id="systemTime" class="h5 mb-0" style="color: var(--text-secondary);"></div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="container mt-4">
-            <!-- Control Panel -->
-            <div class="control-panel">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5><i class="fas fa-phone"></i> Call Control</h5>
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control" id="callIdInput" 
-                                   placeholder="Enter Call ID (optional)" 
-                                   style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #e6eef6;">
-                        </div>
-                        <button class="btn btn-custom me-2" onclick="startMonitoring()">
-                            <i class="fas fa-play"></i> Start Monitoring
-                        </button>
-                        <button class="btn btn-danger-custom" onclick="stopMonitoring()">
-                            <i class="fas fa-stop"></i> Stop Monitoring
-                        </button>
-                    </div>
-                    <div class="col-md-6">
-                        <h5><i class="fas fa-chart-line"></i> Quick Stats</h5>
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="stats-card">
-                                    <div class="stats-number" id="activeCallsCount">0</div>
-                                    <small>Active Calls</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="stats-card">
-                                    <div class="stats-number" id="alertsCount">0</div>
-                                    <small>Alerts</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="stats-card">
-                                    <div class="stats-number" id="chunksProcessed">0</div>
-                                    <small>Chunks</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Call Status -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="call-status inactive" id="callStatus">
-                        <h5><i class="fas fa-phone-slash"></i> No Active Calls</h5>
-                        <p class="mb-0">Start monitoring to see call activity</p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="call-status" id="webSocketStatus">
-                        <h5><i class="fas fa-wifi"></i> WebSocket Status</h5>
-                        <p class="mb-0" id="wsStatusText">Not connected</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alerts and Transcripts -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="call-status">
-                        <h5><i class="fas fa-exclamation-triangle"></i> Phishing Alerts</h5>
-                        <div id="alertsContainer" class="scrollable">
-                            <p class="text-muted">No alerts yet</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="call-status">
-                        <h5><i class="fas fa-comments"></i> Live Transcripts</h5>
-                        <div id="transcriptsContainer" class="scrollable">
-                            <p class="text-muted">No transcripts yet</p>
-                        </div>
-                    </div>
+    <div class="container mt-4">
+        <!-- Live Transcripts Section -->
+        <div class="card-modern">
+            <h5 class="mb-3">
+                <i class="fas fa-comments me-2"></i>Live Voice Transcripts
+                <span id="liveIndicator" class="live-indicator ms-2">
+                    <i class="fas fa-circle"></i> LIVE
+                </span>
+            </h5>
+            <div id="transcriptsContainer" class="transcript-container">
+                <div class="empty-state">
+                    <i class="fas fa-microphone"></i>
+                    <p>Listening for voice data from backend...</p>
+                    <small class="text-muted">Start your voice phishing detection system</small>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        class CallMonitor {
+        class VoicePhishingMonitor {
             constructor() {
-                this.socket = null;
-                this.currentCallId = null;
-                this.isMonitoring = false;
+                this.activeSockets = new Map();
                 this.stats = {
-                    activeCalls: 0,
-                    alerts: 0,
-                    chunksProcessed: 0
+                    chunksProcessed: 0,
+                    totalPhishingScore: 0
                 };
-                
                 this.initializeUI();
-                this.startClock();
-                this.requestNotificationPermission();
+                this.updateSystemTime();
+                setInterval(() => this.updateSystemTime(), 1000);
+                this.startAutoDiscovery();
             }
-            
+
             initializeUI() {
-                this.updateConnectionStatus('disconnected', 'Not connected');
-                this.updateStats();
+                this.updateConnectionStatus('connecting');
             }
-            
-            startClock() {
-                setInterval(() => {
-                    document.getElementById('systemTime').textContent = 
-                        new Date().toLocaleTimeString();
-                }, 1000);
+
+            updateSystemTime() {
+                const now = new Date();
+                document.getElementById('systemTime').textContent = 
+                    now.toLocaleTimeString('en-US', { 
+                        hour12: false, 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit' 
+                    });
             }
-            
-            requestNotificationPermission() {
-                if ('Notification' in window && Notification.permission === 'default') {
-                    Notification.requestPermission();
-                }
-            }
-            
-            connectWebSocket(callId) {
-                if (this.socket) {
-                    this.socket.close();
-                }
+
+            updateConnectionStatus(status) {
+                const statusElement = document.getElementById('connectionStatus');
+                const statusText = document.getElementById('statusText');
                 
+                statusElement.className = `status-indicator status-${status}`;
+                
+                switch(status) {
+                    case 'connected':
+                        statusText.textContent = 'Connected to Backend';
+                        break;
+                    case 'connecting':
+                        statusText.textContent = 'Listening for calls...';
+                        break;
+                    default:
+                        statusText.textContent = 'Backend Offline';
+                }
+            }
+
+            async startAutoDiscovery() {
+                // Poll backend for active calls every 2 seconds
+                setInterval(async () => {
+                    try {
+                        const response = await fetch('http://127.0.0.1:8000/active_calls');
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.updateConnectionStatus('connected');
+                            this.handleActiveCalls(data.active_calls);
+                        } else {
+                            this.updateConnectionStatus('disconnected');
+                        }
+                    } catch (error) {
+                        this.updateConnectionStatus('disconnected');
+                        console.log('Waiting for backend to start...');
+                    }
+                }, 2000);
+            }
+
+            handleActiveCalls(activeCalls) {
+                // Connect to any new active calls
+                for (const [callId, callData] of Object.entries(activeCalls)) {
+                    if (!this.activeSockets.has(callId)) {
+                        console.log(`🔗 Connecting to new call: ${callId}`);
+                        this.connectToCall(callId);
+                    }
+                }
+
+                // Disconnect from inactive calls
+                for (const [callId, socket] of this.activeSockets.entries()) {
+                    if (!activeCalls[callId]) {
+                        console.log(`❌ Disconnecting from ended call: ${callId}`);
+                        socket.close();
+                        this.activeSockets.delete(callId);
+                    }
+                }
+            }
+
+            connectToCall(callId) {
                 const wsUrl = `ws://127.0.0.1:8000/ws/call_monitoring/${callId}`;
-                this.socket = new WebSocket(wsUrl);
-                
-                this.socket.onopen = (event) => {
-                    console.log('🔌 WebSocket connected');
-                    this.updateConnectionStatus('connected', 'Connected');
-                    document.getElementById('wsStatusText').textContent = 
-                        `Connected to call: ${callId}`;
+                const socket = new WebSocket(wsUrl);
+
+                socket.onopen = () => {
+                    console.log(`✅ Connected to call: ${callId}`);
+                    this.activeSockets.set(callId, socket);
                 };
-                
-                this.socket.onmessage = (event) => {
+
+                socket.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
                         this.handleWebSocketMessage(data);
                     } catch (error) {
-                        console.error('❌ WebSocket message error:', error);
+                        console.error('Error parsing WebSocket message:', error);
                     }
                 };
-                
-                this.socket.onerror = (error) => {
-                    console.error('❌ WebSocket error:', error);
-                    this.updateConnectionStatus('disconnected', 'Connection error');
+
+                socket.onclose = () => {
+                    console.log(`🔌 Disconnected from call: ${callId}`);
+                    this.activeSockets.delete(callId);
                 };
-                
-                this.socket.onclose = (event) => {
-                    console.log('🔌 WebSocket closed');
-                    this.updateConnectionStatus('disconnected', 'Disconnected');
-                    document.getElementById('wsStatusText').textContent = 'Not connected';
+
+                socket.onerror = (error) => {
+                    console.error(`❌ WebSocket error for call ${callId}:`, error);
+                    this.activeSockets.delete(callId);
                 };
             }
-            
+
             handleWebSocketMessage(data) {
-                console.log('📨 WebSocket message:', data);
-                
+                console.log('📨 Received:', data);
+
                 switch (data.type) {
                     case 'connection_established':
-                        this.handleConnectionEstablished(data);
-                        break;
-                        
-                    case 'call_started':
-                        this.handleCallStarted(data);
+                        console.log('✅ Connected to call:', data.call_id);
                         break;
                         
                     case 'analysis_update':
@@ -379,11 +598,7 @@
                         break;
                         
                     case 'phishing_alert':
-                        this.handlePhishingAlert(data);
-                        break;
-                        
-                    case 'call_ended':
-                        this.handleCallEnded(data);
+                        // Phishing alerts are handled as part of analysis updates
                         break;
                         
                     case 'heartbeat':
@@ -394,265 +609,84 @@
                         console.log('Unknown message type:', data.type);
                 }
             }
-            
-            handleConnectionEstablished(data) {
-                console.log('✅ Connection established for call:', data.call_id);
-            }
-            
-            handleCallStarted(data) {
-                this.stats.activeCalls = 1;
-                this.updateStats();
-                
-                document.getElementById('callStatus').className = 'call-status active';
-                document.getElementById('callStatus').innerHTML = `
-                    <h5><i class="fas fa-phone"></i> <span class="live-indicator">● LIVE</span> Call Active</h5>
-                    <p class="mb-1"><strong>Call ID:</strong> ${data.call_id}</p>
-                    <p class="mb-0"><small>Started: ${new Date(data.timestamp * 1000).toLocaleTimeString()}</small></p>
-                `;
-            }
-            
+
             handleAnalysisUpdate(data) {
                 this.stats.chunksProcessed++;
-                this.updateStats();
+                this.stats.totalPhishingScore += data.phishing_score;
                 
-                this.addTranscript({
-                    call_id: data.call_id,
-                    chunk_number: data.chunk_number,
+                this.addTranscriptItem({
+                    callId: data.call_id,
+                    chunkNumber: data.chunk_number,
                     transcript: data.transcript,
-                    phishing_score: data.phishing_score,
-                    timestamp: data.timestamp
+                    phishingScore: data.phishing_score,
+                    timestamp: new Date(data.timestamp * 1000)
                 });
             }
-            
-            handlePhishingAlert(data) {
-                this.stats.alerts++;
-                this.updateStats();
-                
-                this.showPhishingAlert(data);
-                this.showNotification(
-                    'Phishing Call Detected!',
-                    `Suspicious activity in call ${data.call_id}`,
-                    'high'
-                );
-            }
-            
-            handleCallEnded(data) {
-                this.stats.activeCalls = 0;
-                this.updateStats();
-                
-                document.getElementById('callStatus').className = 'call-status inactive';
-                document.getElementById('callStatus').innerHTML = `
-                    <h5><i class="fas fa-phone-slash"></i> Call Ended</h5>
-                    <p class="mb-1"><strong>Call ID:</strong> ${data.call_id}</p>
-                    <p class="mb-1"><strong>Duration:</strong> ${Math.round(data.summary.duration)}s</p>
-                    <p class="mb-0"><strong>Avg. Phishing Score:</strong> ${(data.summary.average_phishing_score * 100).toFixed(1)}%</p>
-                `;
-            }
-            
-            addTranscript(data) {
+
+            addTranscriptItem(data) {
                 const container = document.getElementById('transcriptsContainer');
                 
-                // Remove "no transcripts" message
-                if (container.innerHTML.includes('No transcripts yet')) {
-                    container.innerHTML = '';
+                // Remove empty state if it exists
+                const emptyState = container.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
                 }
-                
-                const scoreClass = data.phishing_score > 0.6 ? 'score-high' : 
-                                 data.phishing_score > 0.3 ? 'score-medium' : 'score-low';
-                
-                const transcriptDiv = document.createElement('div');
-                transcriptDiv.className = 'transcript-item';
-                transcriptDiv.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <small><strong>Chunk ${data.chunk_number}</strong></small>
-                        <span class="phishing-score ${scoreClass}">
-                            ${(data.phishing_score * 100).toFixed(1)}%
-                        </span>
+
+                const scoreClass = this.getScoreClass(data.phishingScore);
+                const scorePercentage = (data.phishingScore * 100).toFixed(2);
+
+                const transcriptElement = document.createElement('div');
+                transcriptElement.className = 'transcript-item';
+                transcriptElement.innerHTML = `
+                    <div class="transcript-header">
+                        <span class="chunk-number">Call: ${data.callId} | Chunk ${data.chunkNumber}</span>
+                        <span class="timestamp">${data.timestamp.toLocaleTimeString()}</span>
                     </div>
-                    <p class="mb-1">${data.transcript || 'No transcript available'}</p>
-                    <small class="text-muted">${new Date(data.timestamp * 1000).toLocaleTimeString()}</small>
-                `;
-                
-                container.insertBefore(transcriptDiv, container.firstChild);
-                
-                // Keep only latest 10 transcripts
-                while (container.children.length > 10) {
-                    container.removeChild(container.lastChild);
-                }
-            }
-            
-            showPhishingAlert(data) {
-                const container = document.getElementById('alertsContainer');
-                
-                // Remove "no alerts" message
-                if (container.innerHTML.includes('No alerts yet')) {
-                    container.innerHTML = '';
-                }
-                
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `alert p-3 mb-3 ${data.severity === 'high' ? 'alert-high' : 'alert-medium'}`;
-                alertDiv.innerHTML = `
-                    <h6><i class="fas fa-exclamation-triangle"></i> PHISHING ALERT</h6>
-                    <p class="mb-1"><strong>Call:</strong> ${data.call_id}</p>
-                    <p class="mb-1"><strong>Transcript:</strong> ${data.transcript}</p>
-                    <p class="mb-1"><strong>Confidence:</strong> ${(data.confidence * 100).toFixed(1)}%</p>
-                    <small>${new Date(data.timestamp * 1000).toLocaleTimeString()}</small>
-                `;
-                
-                container.insertBefore(alertDiv, container.firstChild);
-                
-                // Show floating notification
-                this.showFloatingAlert(data);
-            }
-            
-            showFloatingAlert(data) {
-                const notification = document.createElement('div');
-                notification.className = `alert alert-${data.severity === 'high' ? 'high' : 'medium'} alert-notification`;
-                notification.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6><i class="fas fa-exclamation-triangle"></i> PHISHING DETECTED</h6>
-                            <p class="mb-1">${data.transcript.substring(0, 100)}${data.transcript.length > 100 ? '...' : ''}</p>
-                            <small>Confidence: ${(data.confidence * 100).toFixed(1)}%</small>
+                    <div class="transcript-text">"${data.transcript}"</div>
+                    <div class="phishing-score-container">
+                        <div class="score-label">
+                            <span>Phishing Risk</span>
+                            <span class="score-percentage ${scoreClass}">${scorePercentage}%</span>
                         </div>
-                        <button class="btn btn-sm" onclick="this.parentElement.parentElement.remove()" 
-                                style="color: inherit; border: none; background: none;">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar ${scoreClass}" style="width: ${scorePercentage}%"></div>
+                        </div>
                     </div>
                 `;
+
+                container.insertBefore(transcriptElement, container.firstChild);
                 
-                document.body.appendChild(notification);
-                
-                // Auto-remove after 10 seconds
-                setTimeout(() => {
-                    if (notification.parentElement) {
-                        notification.remove();
-                    }
-                }, 10000);
-            }
-            
-            showNotification(title, body, type = 'info') {
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    const notification = new Notification(title, {
-                        body: body,
-                        icon: type === 'high' ? '🚨' : 'ℹ️',
-                        requireInteraction: type === 'high'
-                    });
-                    
-                    setTimeout(() => notification.close(), 5000);
+                // Keep only the last 50 transcripts for better history
+                const transcripts = container.querySelectorAll('.transcript-item');
+                if (transcripts.length > 50) {
+                    transcripts[transcripts.length - 1].remove();
                 }
+
+                // Auto-scroll to show new content
+                container.scrollTop = 0;
+                
+                // Log to console for terminal visibility
+                console.log(`🎙️ Transcript [${scorePercentage}%]: "${data.transcript}"`);
             }
-            
-            updateConnectionStatus(status, message) {
-                const statusElement = document.getElementById('connectionStatus');
-                statusElement.className = `connection-status ${status}`;
-                statusElement.innerHTML = `<i class="fas fa-circle"></i> ${message}`;
-            }
-            
-            updateStats() {
-                document.getElementById('activeCallsCount').textContent = this.stats.activeCalls;
-                document.getElementById('alertsCount').textContent = this.stats.alerts;
-                document.getElementById('chunksProcessed').textContent = this.stats.chunksProcessed;
-            }
-            
-            startMonitoring() {
-                const callIdInput = document.getElementById('callIdInput');
-                const callId = callIdInput.value.trim() || `call_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
-                
-                this.currentCallId = callId;
-                this.isMonitoring = true;
-                
-                console.log('🎬 Starting monitoring for call:', callId);
-                
-                // Connect WebSocket
-                this.connectWebSocket(callId);
-                
-                // Initialize call monitoring on backend
-                fetch('/start_call_monitoring/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `call_id=${encodeURIComponent(callId)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('✅ Backend monitoring started:', data);
-                })
-                .catch(error => {
-                    console.error('❌ Failed to start backend monitoring:', error);
-                });
-                
-                // Update UI
-                callIdInput.value = callId;
-                document.getElementById('callStatus').className = 'call-status active';
-                document.getElementById('callStatus').innerHTML = `
-                    <h5><i class="fas fa-phone"></i> <span class="live-indicator">● READY</span> Monitoring Started</h5>
-                    <p class="mb-1"><strong>Call ID:</strong> ${callId}</p>
-                    <p class="mb-0">Waiting for audio data...</p>
-                `;
-            }
-            
-            stopMonitoring() {
-                if (!this.isMonitoring) {
-                    console.log('⚠️ No active monitoring to stop');
-                    return;
-                }
-                
-                console.log('🛑 Stopping monitoring for call:', this.currentCallId);
-                
-                this.isMonitoring = false;
-                
-                // Close WebSocket
-                if (this.socket) {
-                    this.socket.close();
-                }
-                
-                // Finalize call on backend
-                if (this.currentCallId) {
-                    fetch('/finalize_call/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: `call_id=${encodeURIComponent(this.currentCallId)}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('✅ Call finalized:', data);
-                    })
-                    .catch(error => {
-                        console.error('❌ Failed to finalize call:', error);
-                    });
-                }
-                
-                // Update UI
-                document.getElementById('callStatus').className = 'call-status inactive';
-                document.getElementById('callStatus').innerHTML = `
-                    <h5><i class="fas fa-phone-slash"></i> Monitoring Stopped</h5>
-                    <p class="mb-0">Ready to start new monitoring session</p>
-                `;
-                
-                this.currentCallId = null;
+
+            getScoreClass(score) {
+                if (score >= 0.6) return 'score-high';
+                if (score >= 0.3) return 'score-medium';
+                return 'score-low';
             }
         }
+
+        // Auto-start monitoring when page loads
+        let monitor;
         
-        // Global functions for buttons
-        let callMonitor;
-        
-        function startMonitoring() {
-            callMonitor.startMonitoring();
-        }
-        
-        function stopMonitoring() {
-            callMonitor.stopMonitoring();
-        }
-        
-        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            callMonitor = new CallMonitor();
-            console.log('🚀 Call Monitor initialized');
+            console.log('🚀 Voice Phishing Detection Frontend Started');
+            console.log('📡 Listening for backend data...');
+            monitor = new VoicePhishingMonitor();
+        });
+    </script>
+</body>
+</html>
         });
     </script>
 </body>
