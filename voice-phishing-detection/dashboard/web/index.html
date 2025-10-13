@@ -27,6 +27,7 @@
       </div>
 
       <button id="uploadBtn" class="btn btn-primary">Upload & Predict</button>
+      <button id="gotoRealtimeBtn" class="btn btn-success ms-2" style="margin-left:10px;">Go to Real-time Monitor</button>
 
       <div id="results"></div>
     </div>
@@ -90,6 +91,11 @@ function escapeHtml(s) {
   if (!s) return '';
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
 }
+
+// Redirect button logic
+document.getElementById('gotoRealtimeBtn').onclick = function() {
+  window.location.href = "/realtime";
+};
 </script>
 
 </body>

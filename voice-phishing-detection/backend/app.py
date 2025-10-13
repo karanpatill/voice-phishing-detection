@@ -1,17 +1,21 @@
-from fastapi import FastAPI, UploadFile, Form, WebSocket, WebSocketDisconnect
+import asyncio
+import json
+import os
+import time
+import uuid
+from dotenv import load_dotenv
+from typing import Dict, List
+
+import torch
+import whisper
+from fastapi import FastAPI, Form, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from supabase import create_client, Client
-import whisper
-import torch
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification # type: ignore
-import os
-import uuid
-import time
-import json
-from typing import Dict, List
-import asyncio
+from supabase import Client, create_client
+from transformers import (DistilBertForSequenceClassification, # type: ignore
+                          DistilBertTokenizer)
 
+load_dotenv()
 # ----------------------------
 # Supabase Setup
 # ----------------------------
@@ -23,8 +27,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Load Whisper + DistilBERT
 # ----------------------------
 whisper_model = whisper.load_model("base")
-
-
 tokenizer = DistilBertTokenizer.from_pretrained("./classifier/saved_model")
 bert_model = DistilBertForSequenceClassification.from_pretrained("./classifier/saved_model")
 
@@ -36,42 +38,22 @@ app = FastAPI()
 # ----------------------------
 # Real-time Call Management
 # ----------------------------
-# Store active call sessions and WebSocket connections
 call_sessions: Dict[str, Dict] = {}
 active_connections: Dict[str, List[WebSocket]] = {}
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "web")
-
 if not os.path.exists(WEB_DIR):
     raise RuntimeError(f"Directory '{WEB_DIR}' does not exist")
 
-# Serve static files like JS/CSS/images
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
 
-@app.get("/")
-async def root():
-    return FileResponse(os.path.join(WEB_DIR, "index.html"))
-
-@app.get("/realtime")
-async def realtime_dashboard():
-    return FileResponse(os.path.join(WEB_DIR, "realtime.html"))
-
-@app.post("/upload_chunk/")
-async def upload_chunk(
-    file: UploadFile,
-    call_id: str = Form(...),         # call identifier (same for all chunks of 1 call)
-    chunk_number: int = Form(...),    # chunk order (0, 1, 2, ...)
-):
+# --- Core Logic Helper Function ---
+async def _process_and_store_chunk(file: UploadFile, call_id: str, chunk_number: int):
     """
-    Uploads a 5s audio chunk:
-    - Save locally
-    - Upload to Supabase storage
-    - Transcribe with Whisper
-    - Detect phishing with DistilBERT
-    - Store metadata in Supabase table
+    This single function now contains all the core logic for processing a chunk.
+    It's called by both the real-time and standard upload endpoints.
     """
-
     # Step 1: Save chunk locally
     filename = f"{call_id}_{chunk_number}_{uuid.uuid4()}.wav"
     filepath = f"temp/{filename}"
@@ -90,7 +72,7 @@ async def upload_chunk(
 
     # Step 4: Classify with DistilBERT
     inputs = tokenizer(transcript, return_tensors="pt", truncation=True)
-    outputs = bert_model(**inputs) # type: ignore
+    outputs = bert_model(**inputs)  # type: ignore
     probs = torch.softmax(outputs.logits, dim=1)
     normal_score = float(probs[0][0])
     phishing_score = float(probs[0][1])
@@ -116,6 +98,29 @@ async def upload_chunk(
         "file_url": file_url
     }
 
+
+@app.get("/")
+async def root():
+    return FileResponse(os.path.join(WEB_DIR, "index.html"))
+
+
+@app.get("/realtime")
+async def realtime_dashboard():
+    return FileResponse(os.path.join(WEB_DIR, "realtime.html"))
+
+
+@app.post("/upload_chunk/")
+async def upload_chunk(
+    file: UploadFile,
+    call_id: str = Form(...),
+    chunk_number: int = Form(...),
+):
+    """
+    Standard endpoint for uploading a single chunk.
+    It now simply calls the core processing function.
+    """
+    return await _process_and_store_chunk(file, call_id, chunk_number)
+
 # ----------------------------
 # Real-time Call Monitoring Endpoints
 # ----------------------------
@@ -129,15 +134,13 @@ async def start_call_monitoring(call_id: str = Form(...)):
         "phishing_alerts": [],
         "status": "active"
     }
-    
-    # Notify connected WebSocket clients
     await broadcast_to_call(call_id, {
         "type": "call_started",
         "call_id": call_id,
         "timestamp": time.time()
     })
-    
     return {"status": "monitoring_started", "call_id": call_id}
+
 
 @app.post("/upload_realtime_chunk/")
 async def upload_realtime_chunk(
@@ -145,26 +148,26 @@ async def upload_realtime_chunk(
     call_id: str = Form(...),
     chunk_number: int = Form(...)
 ):
-    """Handle real-time audio chunks with WebSocket notifications"""
-    
-    # Process chunk using existing logic
-    result = await upload_chunk(file, call_id, chunk_number)
-    
-    # Add timestamp for real-time tracking
+    """
+    Handles real-time chunks. It calls the SAME core logic function
+    to ensure data is processed and stored in the database, then adds
+    real-time WebSocket notifications.
+    """
+    # Step 1: Process and store the chunk using the shared helper function
+    result = await _process_and_store_chunk(file, call_id, chunk_number)
+
+    # Step 2: Add real-time specific data
     result["timestamp"] = time.time()
-    
-    # Store in call session
     if call_id in call_sessions:
         call_sessions[call_id]["chunks"].append(result)
-    
-    # Check for phishing and send alerts if needed
+
+    # Step 3: Check for phishing and broadcast alerts
     phishing_score = result["prediction"]["phishing"]
-    
     if phishing_score > 0.6:  # High phishing threshold
         alert = await handle_phishing_alert(call_id, result)
         result["alert"] = alert
-    
-    # Broadcast analysis update to WebSocket clients
+
+    # Step 4: Broadcast the analysis update to WebSocket clients
     await broadcast_to_call(call_id, {
         "type": "analysis_update",
         "call_id": call_id,
@@ -173,8 +176,9 @@ async def upload_realtime_chunk(
         "phishing_score": phishing_score,
         "timestamp": result["timestamp"]
     })
-    
+
     return result
+
 
 @app.post("/finalize_call/")
 async def finalize_call(call_id: str = Form(...)):
@@ -183,7 +187,6 @@ async def finalize_call(call_id: str = Form(...)):
         call_sessions[call_id]["status"] = "completed"
         call_sessions[call_id]["end_time"] = time.time()
         
-        # Calculate call summary
         chunks = call_sessions[call_id]["chunks"]
         total_chunks = len(chunks)
         avg_phishing_score = sum(chunk["prediction"]["phishing"] for chunk in chunks) / total_chunks if total_chunks > 0 else 0
@@ -196,7 +199,6 @@ async def finalize_call(call_id: str = Form(...)):
             "duration": call_sessions[call_id].get("end_time", time.time()) - call_sessions[call_id]["start_time"]
         }
         
-        # Broadcast call ended
         await broadcast_to_call(call_id, {
             "type": "call_ended",
             "call_id": call_id,
@@ -215,6 +217,7 @@ async def get_call_status(call_id: str):
         return call_sessions[call_id]
     return {"error": "Call not found"}
 
+
 @app.get("/active_calls/")
 async def get_active_calls():
     """Get all active calls"""
@@ -225,37 +228,25 @@ async def get_active_calls():
     return {"active_calls": active_calls}
 
 # ----------------------------
-# WebSocket Support
+# WebSocket Support (No changes needed here)
 # ----------------------------
-
 @app.websocket("/ws/call_monitoring/{call_id}")
 async def websocket_endpoint(websocket: WebSocket, call_id: str):
-    """WebSocket for real-time call monitoring"""
     await websocket.accept()
-    
-    # Add to active connections
     if call_id not in active_connections:
         active_connections[call_id] = []
     active_connections[call_id].append(websocket)
-    
     print(f"🔌 WebSocket connected for call: {call_id}")
-    
     try:
-        # Send initial status
         if call_id in call_sessions:
             await websocket.send_text(json.dumps({
                 "type": "connection_established",
                 "call_id": call_id,
                 "session_data": call_sessions[call_id]
             }))
-        
-        # Keep connection alive and handle incoming messages
         while True:
             try:
-                # Wait for messages (with timeout)
                 message = await asyncio.wait_for(websocket.receive_text(), timeout=1.0)
-                
-                # Handle client messages if needed
                 try:
                     data = json.loads(message)
                     await handle_websocket_message(call_id, websocket, data)
@@ -264,20 +255,16 @@ async def websocket_endpoint(websocket: WebSocket, call_id: str):
                         "type": "error",
                         "message": "Invalid JSON received"
                     }))
-                    
             except asyncio.TimeoutError:
-                # Send heartbeat to keep connection alive
                 await websocket.send_text(json.dumps({
                     "type": "heartbeat",
                     "timestamp": time.time()
                 }))
-                
     except WebSocketDisconnect:
         print(f"🔌 WebSocket disconnected for call: {call_id}")
     except Exception as e:
         print(f"❌ WebSocket error for call {call_id}: {e}")
     finally:
-        # Remove from active connections
         if call_id in active_connections:
             active_connections[call_id] = [
                 conn for conn in active_connections[call_id] if conn != websocket
@@ -285,10 +272,9 @@ async def websocket_endpoint(websocket: WebSocket, call_id: str):
             if not active_connections[call_id]:
                 del active_connections[call_id]
 
+
 async def handle_websocket_message(call_id: str, websocket: WebSocket, data: dict):
-    """Handle incoming WebSocket messages from clients"""
     message_type = data.get("type")
-    
     if message_type == "ping":
         await websocket.send_text(json.dumps({
             "type": "pong",
@@ -302,28 +288,24 @@ async def handle_websocket_message(call_id: str, websocket: WebSocket, data: dic
                 "data": call_sessions[call_id]
             }))
 
+
 async def broadcast_to_call(call_id: str, message: dict):
-    """Broadcast message to all WebSocket connections for a call"""
     if call_id in active_connections:
         message_text = json.dumps(message)
         disconnected = []
-        
         for websocket in active_connections[call_id]:
             try:
                 await websocket.send_text(message_text)
             except Exception as e:
                 print(f"❌ Failed to send to WebSocket: {e}")
                 disconnected.append(websocket)
-        
-        # Remove disconnected WebSockets
         for ws in disconnected:
             active_connections[call_id].remove(ws)
 
+
 async def handle_phishing_alert(call_id: str, analysis_result: dict):
-    """Handle phishing alert and broadcast to clients"""
     phishing_score = analysis_result["prediction"]["phishing"]
     transcript = analysis_result["transcript"]
-    
     alert = {
         "type": "phishing_alert",
         "call_id": call_id,
@@ -333,14 +315,8 @@ async def handle_phishing_alert(call_id: str, analysis_result: dict):
         "timestamp": time.time(),
         "chunk_number": analysis_result["chunk_number"]
     }
-    
-    # Store alert in call session
     if call_id in call_sessions:
         call_sessions[call_id]["phishing_alerts"].append(alert)
-    
-    # Broadcast alert
     await broadcast_to_call(call_id, alert)
-    
     print(f"🚨 PHISHING ALERT for call {call_id}: {phishing_score:.1%} confidence")
-    
     return alert
