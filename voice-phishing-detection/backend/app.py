@@ -141,33 +141,32 @@ async def start_call_monitoring(call_id: str = Form(...)):
     })
     return {"status": "monitoring_started", "call_id": call_id}
 
-
 @app.post("/upload_realtime_chunk/")
 async def upload_realtime_chunk(
     file: UploadFile,
     call_id: str = Form(...),
     chunk_number: int = Form(...)
 ):
-    """
-    Handles real-time chunks. It calls the SAME core logic function
-    to ensure data is processed and stored in the database, then adds
-    real-time WebSocket notifications.
-    """
-    # Step 1: Process and store the chunk using the shared helper function
-    result = await _process_and_store_chunk(file, call_id, chunk_number)
-
-    # Step 2: Add real-time specific data
+    """Handle real-time audio chunks with WebSocket notifications"""
+    
+    # Process chunk using existing logic
+    result = await upload_chunk(file, call_id, chunk_number)
+    
+    # Add timestamp for real-time tracking
     result["timestamp"] = time.time()
+    
+    # Store in call session
     if call_id in call_sessions:
         call_sessions[call_id]["chunks"].append(result)
-
-    # Step 3: Check for phishing and broadcast alerts
+    
+    # Check for phishing and send alerts if needed
     phishing_score = result["prediction"]["phishing"]
+    
     if phishing_score > 0.6:  # High phishing threshold
         alert = await handle_phishing_alert(call_id, result)
         result["alert"] = alert
-
-    # Step 4: Broadcast the analysis update to WebSocket clients
+    
+    # Broadcast analysis update to WebSocket clients
     await broadcast_to_call(call_id, {
         "type": "analysis_update",
         "call_id": call_id,
@@ -176,7 +175,7 @@ async def upload_realtime_chunk(
         "phishing_score": phishing_score,
         "timestamp": result["timestamp"]
     })
-
+    
     return result
 
 

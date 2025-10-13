@@ -159,7 +159,7 @@ class VoicePhishingDetectionSystem:
             except Exception as e:
                 print(f"❌ Error: {e}")
     
-    def run_auto_mode(self, duration=None):
+    def run_auto_mode(self, duration=5):
         """Run system in automatic mode"""
         print(f"🤖 Automatic Mode Started")
         
