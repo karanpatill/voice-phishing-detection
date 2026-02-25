@@ -4,9 +4,6 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
 # AI/ML Dependencies
-# Using cpu version of torch for smaller slug size if possible, 
-# but simply listing it here uses standard. 
-# Render free tier might struggle with large torch.
 torch==2.1.1
 transformers==4.35.2
 openai-whisper
@@ -21,3 +18,6 @@ websockets==12.0
 # Utility
 requests==2.31.0
 python-dotenv==1.0.0
+
+# ffmpeg binary for Whisper (needed on platforms without system ffmpeg)
+imageio-ffmpeg

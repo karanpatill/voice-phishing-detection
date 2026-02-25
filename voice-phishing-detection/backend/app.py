@@ -28,6 +28,17 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 # ----------------------------
+# Ensure ffmpeg is available (imageio-ffmpeg bundles a static binary)
+# ----------------------------
+try:
+    import imageio_ffmpeg
+    ffmpeg_path = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
+    os.environ["PATH"] = ffmpeg_path + os.pathsep + os.environ.get("PATH", "")
+    print(f"✅ ffmpeg found via imageio-ffmpeg: {imageio_ffmpeg.get_ffmpeg_exe()}")
+except ImportError:
+    print("ℹ️  imageio-ffmpeg not installed, using system ffmpeg")
+
+# ----------------------------
 # Load Whisper + DistilBERT
 # ----------------------------
 whisper_model = whisper.load_model("tiny")
