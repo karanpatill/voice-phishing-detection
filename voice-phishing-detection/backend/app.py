@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from typing import Dict, List
 
 import torch
+torch.set_num_threads(1)       # Limit CPU threads to save memory on free tier
+torch.set_num_interop_threads(1)
 import whisper
 from fastapi import FastAPI, Form, UploadFile, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,13 +41,32 @@ except ImportError:
     print("ℹ️  imageio-ffmpeg not installed, using system ffmpeg")
 
 # ----------------------------
-# Load Whisper + DistilBERT
+# Lazy-load ML Models (saves ~300MB at startup)
 # ----------------------------
-whisper_model = whisper.load_model("tiny")
+import gc
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "classifier", "saved_model")
-tokenizer = DistilBertTokenizer.from_pretrained(MODEL_DIR)
-bert_model = DistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
+
+_models = {}
+
+def get_whisper_model():
+    if "whisper" not in _models:
+        print("🔄 Loading Whisper tiny model...")
+        _models["whisper"] = whisper.load_model("tiny")
+        gc.collect()
+        print("✅ Whisper model loaded")
+    return _models["whisper"]
+
+def get_bert_model():
+    if "tokenizer" not in _models:
+        print("🔄 Loading DistilBERT tokenizer + model...")
+        _models["tokenizer"] = DistilBertTokenizer.from_pretrained(MODEL_DIR)
+        _models["bert"] = DistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
+        _models["bert"].eval()  # Set to eval mode — saves memory (no grad tracking)
+        gc.collect()
+        print("✅ DistilBERT model loaded")
+    return _models["tokenizer"], _models["bert"]
 
 # ----------------------------
 # FastAPI App
@@ -118,9 +139,7 @@ async def _process_and_store_chunk(file: UploadFile, call_id: str, chunk_number:
         temp_audio.write(file_content)
         temp_audio.flush()
         temp_audio.close()
-        # "tiny" model is fast, but better to use CPU threads if possible
-        # We perform this *before* returning because the UI needs the transcript
-        result = whisper_model.transcribe(temp_audio.name)
+        result = get_whisper_model().transcribe(temp_audio.name)
         transcript = result["text"]
     except Exception as e:
         print(f"Transcription error: {e}")
@@ -131,12 +150,14 @@ async def _process_and_store_chunk(file: UploadFile, call_id: str, chunk_number:
         except:
             pass
     
-    # Step 3: Classify with DistilBERT
-    inputs = tokenizer(transcript, return_tensors="pt", truncation=True)
-    outputs = bert_model(**inputs)
-    probs = torch.softmax(outputs.logits, dim=1)
-    normal_score = float(probs[0][0])
-    phishing_score = float(probs[0][1])
+    # Step 3: Classify with DistilBERT (no_grad saves memory)
+    tokenizer_inst, bert_inst = get_bert_model()
+    with torch.no_grad():
+        inputs = tokenizer_inst(transcript, return_tensors="pt", truncation=True)
+        outputs = bert_inst(**inputs)
+        probs = torch.softmax(outputs.logits, dim=1)
+        normal_score = float(probs[0][0])
+        phishing_score = float(probs[0][1])
     
     # Step 4: Offload Supabase operations to background
     background_tasks.add_task(
