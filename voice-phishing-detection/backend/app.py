@@ -9,6 +9,7 @@ from typing import Dict, List
 import torch
 import whisper
 from fastapi import FastAPI, Form, UploadFile, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from supabase import Client, create_client
@@ -19,10 +20,12 @@ load_dotenv()
 # ----------------------------
 # Supabase Setup
 # ----------------------------
-# Load from environment variables (for deployment) or use defaults (for local dev)
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gjwcexivvjhunbdnhepx.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdqd2NleGl2dmpodW5iZG5oZXB4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTUwMTQ0OSwiZXhwIjoyMDc1MDc3NDQ5fQ.P4nz5LMH1V3qunT-_lnF_65BvqQJsZ0xiBgVGj_tMXQ")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Load from environment variables (set these on Render dashboard)
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("⚠️  WARNING: SUPABASE_URL and/or SUPABASE_KEY not set. Database features will fail.")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 # ----------------------------
 # Load Whisper + DistilBERT
@@ -36,7 +39,16 @@ bert_model = DistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
 # ----------------------------
 # FastAPI App
 # ----------------------------
-app = FastAPI()
+app = FastAPI(title="VoiceShield - Voice Phishing Detection")
+
+# CORS middleware for deployment
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ----------------------------
 # Real-time Call Management
