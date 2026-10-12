@@ -1,130 +1,133 @@
-# 🛡️ Voice Phishing Detection System
+# 🛡️ VoiceShield — Real-Time AI Voice Phishing & Scam Detection System
 
-A simple, real-time system to detect phishing in phone calls using speech-to-text and AI.  
-You get a web dashboard, backend, and a client to record/upload audio.
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" />
+  <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" />
+  <img src="https://img.shields.io/badge/OpenAI_Whisper-00A67E?style=for-the-badge&logo=openai&logoColor=white" />
+  <img src="https://img.shields.io/badge/HuggingFace_DistilBERT-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+</p>
+
+**VoiceShield** is an AI-powered voice stream analysis platform that listens to live telephone/VoIP audio streams in real-time, transcribes conversations using OpenAI's **Whisper**, and evaluates the threat level using a fine-tuned **DistilBERT** NLP classifier. If fraudulent intent (such as bank OTP theft, urgency triggers, or identity spoofing) is detected, VoiceShield immediately triggers visual alarms and audio siren warnings to alert the victim before they can compromise sensitive credentials.
 
 ---
 
-## 🚀 Quick Start
+## 🌟 Key Highlights & Demo Features
 
-### 1. **Clone the Project**
+- ⚡ **Real-Time Speech-to-Text**: High-accuracy local chunk transcription powered by OpenAI Whisper (`tiny`/`base`).
+- 🧠 **Contextual Phishing Classification**: Fine-tuned DistilBERT transformer outputs confidence scores (e.g., 99.8% Critical Risk).
+- 🚨 **Multi-Tier Threat Alert System**:
+  - Safe (`< 30%`): Green status indicator.
+  - Suspicious (`30% - 60%`): Amber status indicator.
+  - Critical Phishing (`> 60%`): Flashing Red Cyber Warning + Audio Siren Alert.
+- 🎯 **1-Click Judge & Hackathon Demo**:
+  - Built-in simulation buttons on the web dashboard to instantly test **Bank OTP Scam** vs **Normal Business Call** with zero mic setup needed.
+- 🎙️ **Live In-Browser Mic Detection**: Test your own voice directly through any phone or laptop browser via Web Audio API.
+- ☁️ **Cloud & Offline Resilient**: Runs in-memory / local fallback when offline, or connects seamlessly to Supabase when credentials are provided.
 
-```sh
-git clone <your-repo-url>
-cd voice-phishing-detection
+---
+
+## 🏗️ System Architecture
+
+```
+                  ┌───────────────────────────────────────────────┐
+                  │           Audio Stream Input                  │
+                  │   (Browser Mic / VoIP Stream / Demo Simulator)│
+                  └───────────────────────┬───────────────────────┘
+                                          │ Audio Chunks (.wav)
+                                          ▼
+                  ┌───────────────────────────────────────────────┐
+                  │           FastAPI Backend Engine              │
+                  ├───────────────────────────────────────────────┤
+                  │ 1. Whisper ASR: Audio ➡️ Text Transcript      │
+                  │ 2. DistilBERT: Text ➡️ Phishing Probability   │
+                  │ 3. Keyword Heuristics: Flag High-Risk Terms   │
+                  │ 4. Storage Engine: Supabase / Local Fallback  │
+                  └───────────────────────┬───────────────────────┘
+                                          │ WebSocket Broadcast
+                                          ▼
+                  ┌───────────────────────────────────────────────┐
+                  │          Real-Time Threat Dashboard           │
+                  │  - Live Transcript Streaming                  │
+                  │  - Threat Confidence Meter (0 - 100%)         │
+                  │  - Trigger Phrase Highlight                   │
+                  │  - Real-Time Siren Audio Interception         │
+                  └───────────────────────────────────────────────┘
 ```
 
 ---
 
-### 2. **Install Python Dependencies**
+## 🚀 Live Cloud Deployment (Render / Docker)
 
-```sh
-python -m venv venv
-venv\Scripts\activate   # On Windows
-# or
-source venv/bin/activate   # On Linux/Mac
+### Option 1: 1-Click Blueprint on Render
+1. Push this repository to your GitHub account.
+2. Sign in to [Render](https://render.com).
+3. Click **New +** ➡️ **Blueprint**.
+4. Select your `voice-phishing-detection` repository.
+5. Render will automatically detect `render.yaml` and build the container using `Dockerfile`.
+6. Once deployed, you will get a permanent public HTTPS/WSS URL:  
+   `https://voiceshield-production.onrender.com/realtime`
 
-pip install -r https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip
+### Option 2: Docker Container Build
+```bash
+# Build the production Docker image
+docker build -t voiceshield .
+
+# Run the container locally
+docker run -p 10000:10000 voiceshield
+```
+Open `http://localhost:10000/realtime` in your browser.
+
+---
+
+## 💻 Local Development Setup
+
+### 1. Prerequisites
+- Python 3.11+
+- FFmpeg installed (bundled automatically via `imageio-ffmpeg` on Windows)
+
+### 2. Installation
+```bash
+# Clone the repository
+git clone https://github.com/karanpatill/voice-phishing-detection.git
+cd voice-phishing-detection/voice-phishing-detection
+
+# Create and activate virtual environment
+python -m venv backend/venv
+# Windows:
+backend\venv\Scripts\activate
+# Linux/macOS:
+source backend/venv/bin/activate
+
+# Install dependencies
+pip install -r backend/requirements.txt
 ```
 
----
-
-### 3. **Supabase Setup**
-
-#### a. **Create a Supabase Project**
-- Go to [https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip](https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip) and create a new project.
-
-#### b. **Get Your Supabase URL and API Key**
-- In your Supabase project, go to **Project Settings → API**.
-- Copy the **Project URL** and **anon public API key**.
-
-#### c. **Create a Table**
-- Go to **Table Editor** in Supabase.
-- Click **New Table** and name it `chunks`.
-- Add these columns:
-    | Name           | Type      |
-    |----------------|-----------|
-    | id             | bigint    | (Primary key, auto-increment)
-    | call_id        | text      |
-    | chunk_number   | int4      |
-    | chunk_name     | text      |
-    | file_url       | text      |
-    | transcript     | text      |
-    | phishing_score | float8    |
-    | created_at     | timestamp | (default: now())
-
-#### d. **Create a Storage Bucket**
-- Go to **Storage** in Supabase.
-- Create a bucket named `audio-chunks`.
-
----
-
-### 4. **Configure Your Keys**
-
-- Open `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip`.
-- Find these lines at the top:
-  ```python
-  SUPABASE_URL = "Your-Supabase-URL"
-  SUPABASE_KEY = "Your-Supabase-API-Key"
-  ```
-- Paste your Supabase URL and API key here.
-
----
-
-### 5. **Download/Place the AI Model**
-
-- Download or copy the `saved_model` folder (DistilBERT) into:  
-  `classifier/saved_model/`
-- If you use Whisper, make sure it downloads automatically or is available.
-
----
-
-### 6. **Run the Backend**
-
-```sh
-uvicorn https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip --reload
+### 3. Run Development Server
+```bash
+python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 --reload
 ```
-- The API runs at [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-- The dashboard is at [https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip](https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip)
+Access the dashboard at:
+- **Real-Time Monitor**: [http://127.0.0.1:8000/realtime](http://127.0.0.1:8000/realtime)
+- **Manual Upload**: [http://127.0.0.1:8000/upload](http://127.0.0.1:8000/upload)
+- **Health Check**: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
 
 ---
 
-### 7. **Run the Client (Recorder)**
+## 📡 API Reference
 
-- Edit `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip` if you need to set the backend URL.
-- Run:
-  ```sh
-  python https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip
-  ```
-
----
-
-### 8. **Use the Dashboard**
-
-- Open the dashboard in your browser.
-- Click **Start Monitoring** to see real-time transcripts and phishing alerts.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Container health check and model cache status |
+| `POST` | `/api/demo/simulate` | 1-Click demo simulation (`scenario=scam` or `scenario=normal`) |
+| `POST` | `/start_call_monitoring/` | Initializes a new monitoring session for a call |
+| `POST` | `/upload_realtime_chunk/` | Transcribes audio chunk, computes threat score, and broadcasts alert |
+| `WS` | `/ws/call_monitoring/{call_id}` | WebSocket stream for live transcript and alert updates |
+| `POST` | `/finalize_call/` | Finalizes call and returns risk summary |
 
 ---
 
-## 🛠️ Troubleshooting
-
-- **Keys not working?** Double-check your Supabase URL and API key.
-- **No data in dashboard?** Make sure your Supabase table and bucket names match exactly.
-- **Model errors?** Ensure `classifier/saved_model/` exists and is not empty.
-
----
-
-## 📋 Summary
-
-- **Supabase**: Used for storing audio metadata and files.
-- **Keys**: Set in `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip`.
-- **Table**: Name it `chunks` with the columns above.
-- **Bucket**: Name it `audio-chunks`.
-- **Start backend**: `uvicorn https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip --reload`
-- **Start client**: `python https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip`
-- **Dashboard**: Open `https://raw.githubusercontent.com/karanpatill/voice-phishing-detection/main/voice-phishing-detection/backend/source/site-packages/pip/_internal/req/voice-phishing-detection_3.3.zip` in your browser.
-
----
-
-**Need help?**  
-Open an issue or ask in the project discussions!
+## 👥 Hackathon Team & Credits
+- **Project**: VoiceShield
+- **Built for**: Cyber Security & Anti-Fraud Hackathon Innovation
+- **License**: MIT

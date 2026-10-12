@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.env
+venv/
+backend/venv/
+voice-phishing-detection/backend/venv/
+.pytest_cache/
+.coverage
+htmlcov/
+Moriesh_Employee_Management/
