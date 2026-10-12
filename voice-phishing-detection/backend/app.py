@@ -35,22 +35,25 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and
 try:
     import imageio_ffmpeg
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    ffmpeg_path = os.path.dirname(ffmpeg_exe)
-    target_ffmpeg = os.path.join(ffmpeg_path, "ffmpeg.exe")
-    if not os.path.exists(target_ffmpeg):
-        import shutil
-        try:
-            shutil.copy2(ffmpeg_exe, target_ffmpeg)
-            print(f"[OK] Created ffmpeg alias at: {target_ffmpeg}")
-        except Exception as copy_err:
-            print(f"[WARN] Failed to copy ffmpeg: {copy_err}")
-    os.environ["PATH"] = ffmpeg_path + os.pathsep + os.environ.get("PATH", "")
-    print(f"[OK] ffmpeg found via imageio-ffmpeg: {ffmpeg_path}")
+    ffmpeg_dir = os.path.dirname(ffmpeg_exe)
+    for alias in ["ffmpeg", "ffmpeg.exe"]:
+        alias_path = os.path.join(ffmpeg_dir, alias)
+        if not os.path.exists(alias_path) and alias_path != ffmpeg_exe:
+            try:
+                import shutil
+                shutil.copy2(ffmpeg_exe, alias_path)
+                if hasattr(os, "chmod"):
+                    os.chmod(alias_path, 0o755)
+                print(f"[OK] Created ffmpeg alias: {alias_path}")
+            except Exception as copy_err:
+                print(f"[WARN] Failed to copy ffmpeg alias {alias}: {copy_err}")
+    os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+    print(f"[OK] ffmpeg configured in PATH: {ffmpeg_dir}")
 except ImportError:
     print("[INFO] imageio-ffmpeg not installed, using system ffmpeg")
 
 # ----------------------------
-# Lazy-load ML Models (saves ~300MB at startup)
+# Lazy-load ML Models (saves ~300MB at startup + INT8 Quantization)
 # ----------------------------
 import gc
 
@@ -69,12 +72,17 @@ def get_whisper_model():
 
 def get_bert_model():
     if "tokenizer" not in _models:
-        print("🔄 Loading DistilBERT tokenizer + model...")
+        print("🔄 Loading DistilBERT tokenizer + model (INT8 quantized)...")
         _models["tokenizer"] = DistilBertTokenizer.from_pretrained(MODEL_DIR)
-        _models["bert"] = DistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
-        _models["bert"].eval()  # Set to eval mode — saves memory (no grad tracking)
+        raw_bert = DistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
+        raw_bert.eval()
+        # Quantize Linear layers to INT8: drops memory from 256MB -> 90MB (essential for 512MB Render free tier)
+        _models["bert"] = torch.quantization.quantize_dynamic(
+            raw_bert, {torch.nn.Linear}, dtype=torch.qint8
+        )
+        del raw_bert
         gc.collect()
-        print("✅ DistilBERT model loaded")
+        print("✅ DistilBERT INT8 model loaded (~90MB RAM)")
     return _models["tokenizer"], _models["bert"]
 
 # ----------------------------
