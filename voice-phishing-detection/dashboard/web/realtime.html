@@ -4,631 +4,925 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoiceShield - Real-time Monitor</title>
+    <title>VoiceShield SOC — Real-Time Telephony Defense & Anti-Phishing Monitor</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
     <style>
         :root {
-            --primary-bg: #0f172a;
-            --secondary-bg: #1e293b;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --text-main: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-base: #06090e;
+            --bg-surface: #0c1017;
+            --bg-surface-elevated: #121824;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.16);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --threat-safe: #10b981;
+            --threat-suspicious: #f59e0b;
+            --threat-critical: #ff2a5f;
+            --threat-critical-glow: rgba(255, 42, 95, 0.35);
         }
 
-        /* Base & Background */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-            color: var(--text-main);
-            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
-            position: relative;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.15), transparent);
+            background-size: 24px 24px, 100% 100%;
         }
 
-        /* Ambient Glow */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
-            z-index: -1;
-            animation: rotate 60s linear infinite;
-        }
-
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Header */
-        .header {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 0;
+        /* Top Cybersecurity Navbar */
+        .soc-header {
+            background: rgba(12, 16, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0.9rem 0;
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 100;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-decoration: none;
+        .brand-badge {
             display: inline-flex;
             align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #fff;
         }
 
-        /* Cards & Containers */
-        .glass-panel {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+        .brand-logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0284c7, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
         }
 
-        .glass-panel:hover {
-            border-color: var(--accent-color);
-            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.4);
+        .brand-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+            color: #fff;
         }
 
-        /* Connection Status */
+        .brand-sub {
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
         .status-pill {
             display: inline-flex;
             align-items: center;
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 0.85rem;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border: 1px solid var(--border-subtle);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--threat-safe);
+            box-shadow: 0 0 10px var(--threat-safe);
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .pulse-dot.disconnected {
+            background: var(--threat-critical);
+            box-shadow: 0 0 10px var(--threat-critical);
+        }
+
+        .btn-tutorial-trigger {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
             font-weight: 600;
-            backdrop-filter: blur(10px);
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        .status-connected {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: var(--success-color);
-            color: var(--success-color);
+        .btn-tutorial-trigger:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
         }
 
-        .status-disconnected {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: var(--danger-color);
-            color: var(--danger-color);
+        /* Telemetry Bar */
+        .telemetry-bar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 18px;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
-        .status-connecting {
-            background: rgba(245, 158, 11, 0.1);
-            border-color: var(--warning-color);
-            color: var(--warning-color);
-        }
-
-        .live-badge {
+        .telemetry-item {
             display: inline-flex;
             align-items: center;
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-            border: 1px solid var(--danger-color);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-left: 10px;
-            animation: pulse 2s infinite;
+            gap: 8px;
         }
 
-        /* Transcripts */
-        .transcript-container {
-            max-height: 600px;
-            overflow-y: auto;
-            padding-right: 10px;
+        .telemetry-item .value {
+            color: #fff;
+            font-weight: 600;
         }
 
-        .transcript-item {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        /* Mission Control Panel */
+        .soc-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
             border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            position: relative;
-            transition: all 0.3s ease;
-            animation: slideInRight 0.4s ease-out;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.2s ease;
         }
 
-        .transcript-item::before {
+        .soc-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-header-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .card-main-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Scenario Buttons (Enterprise Quality) */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        .action-card-btn {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.1rem;
+            text-align: left;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: #fff;
+            width: 100%;
+        }
+
+        .action-card-btn::before {
             content: '';
             position: absolute;
             left: 0;
             top: 0;
             bottom: 0;
-            width: 4px;
-            border-radius: 4px 0 0 4px;
+            width: 3px;
+            background: transparent;
+            transition: background 0.2s;
         }
 
-        .transcript-item.risk-low::before {
-            background: var(--success-color);
+        .action-card-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-strong);
+            background: #172030;
         }
 
-        .transcript-item.risk-medium::before {
-            background: var(--warning-color);
+        /* Specific Action Styling */
+        .btn-scam-attack::before {
+            background: var(--threat-critical);
+        }
+        .btn-scam-attack:hover {
+            box-shadow: 0 8px 24px rgba(255, 42, 95, 0.15);
+            border-color: rgba(255, 42, 95, 0.4);
         }
 
-        .transcript-item.risk-high::before {
-            background: var(--danger-color);
+        .btn-normal-sim::before {
+            background: var(--accent-cyan);
+        }
+        .btn-normal-sim:hover {
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+            border-color: rgba(6, 182, 212, 0.4);
         }
 
-        .transcript-item:hover {
-            transform: translateX(4px);
-            background: rgba(30, 41, 59, 0.8);
+        .btn-mic-record::before {
+            background: var(--threat-safe);
+        }
+        .btn-mic-record:hover {
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
         }
 
-        .transcript-header {
+        .btn-mic-active {
+            background: rgba(255, 42, 95, 0.15) !important;
+            border-color: var(--threat-critical) !important;
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% { box-shadow: 0 0 0 0 rgba(255, 42, 95, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 42, 95, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 42, 95, 0); }
+        }
+
+        .action-btn-title {
+            font-weight: 700;
+            font-size: 0.96rem;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+        }
+
+        .action-btn-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .action-btn-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            padding: 2px 7px;
+            border-radius: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
-        .transcript-text {
-            font-size: 1rem;
-            color: var(--text-main);
-            line-height: 1.6;
+        /* Live Transcripts Feed */
+        .transcript-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 580px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .transcript-feed::-webkit-scrollbar {
+            width: 5px;
+        }
+        .transcript-feed::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .feed-empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+            border: 1px dashed var(--border-subtle);
+            border-radius: 10px;
+        }
+
+        .feed-empty-state i {
+            font-size: 2.2rem;
             margin-bottom: 12px;
+            opacity: 0.3;
         }
 
-        /* Risk Meters */
-        .risk-meter {
+        /* Threat Entry Card */
+        .feed-entry {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.15rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feed-entry.threat-critical {
+            border-left: 4px solid var(--threat-critical);
+            background: linear-gradient(90deg, rgba(255, 42, 95, 0.08) 0%, var(--bg-surface-elevated) 40%);
+            box-shadow: 0 4px 20px rgba(255, 42, 95, 0.12);
+        }
+
+        .feed-entry.threat-suspicious {
+            border-left: 4px solid var(--threat-suspicious);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-surface-elevated) 40%);
+        }
+
+        .feed-entry.threat-safe {
+            border-left: 4px solid var(--threat-safe);
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.06) 0%, var(--bg-surface-elevated) 40%);
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .entry-transcript {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #f8fafc;
+            padding: 6px 0;
+        }
+
+        /* Keyword Highlights */
+        mark.threat-keyword {
+            background: rgba(255, 42, 95, 0.25);
+            color: #fda4af;
+            border-bottom: 2px solid var(--threat-critical);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .threat-tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .threat-intel-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: rgba(255, 42, 95, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(255, 42, 95, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .risk-gauge-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        .risk-progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .risk-progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .risk-score-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+            min-width: 55px;
+            text-align: right;
+        }
+
+        /* Critical Phishing Overlay Siren Modal */
+        .phishing-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(7, 10, 15, 0.88);
+            backdrop-filter: blur(12px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .siren-box {
+            background: #130a10;
+            border: 1px solid var(--threat-critical);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            padding: 2.2rem;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255, 42, 95, 0.4);
+            animation: pulse-siren 1s infinite alternate;
+        }
+
+        @keyframes pulse-siren {
+            from { border-color: rgba(255, 42, 95, 0.6); box-shadow: 0 0 30px rgba(255, 42, 95, 0.3); }
+            to { border-color: #ff2a5f; box-shadow: 0 0 70px rgba(255, 42, 95, 0.6); }
+        }
+
+        /* ========================================================
+           INTERACTIVE ONBOARDING TUTORIAL MODAL (WITH SKIP)
+           ======================================================== */
+        .tutorial-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 7, 12, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1050;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .tutorial-modal-overlay.active {
+            display: flex;
+        }
+
+        .tutorial-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 16px;
+            max-width: 540px;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.7);
+            position: relative;
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .tutorial-close-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .tutorial-close-btn:hover {
+            color: #fff;
+        }
+
+        .tutorial-step-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            padding: 3px 10px;
+            border-radius: 99px;
+            display: inline-block;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .tutorial-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .tutorial-text {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .tutorial-feature-box {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.84rem;
+            color: #e2e8f0;
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .risk-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            min-width: 60px;
-        }
-
-        .risk-low {
-            color: var(--success-color);
-        }
-
-        .risk-medium {
-            color: var(--warning-color);
-        }
-
-        .risk-high {
-            color: var(--danger-color);
-        }
-
-        .progress-track {
-            flex-grow: 1;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-
-        /* Scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Alerts Overlay */
-        .phishing-alert-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
+        .tutorial-footer {
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 2000;
-            animation: fadeIn 0.3s ease-out;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        .alert-card {
-            background: #1e293b;
-            border: 2px solid var(--danger-color);
-            border-radius: 20px;
-            padding: 3rem;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 90%;
-            width: 450px;
+        .tutorial-dots {
+            display: flex;
+            gap: 6px;
         }
 
-        .alert-icon-lg {
-            font-size: 4rem;
-            color: var(--danger-color);
-            margin-bottom: 20px;
-            animation: pulse 1s infinite;
+        .dot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: all 0.2s;
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+        .dot-indicator.active {
+            background: var(--accent-cyan);
+            width: 20px;
+            border-radius: 4px;
         }
 
-        @keyframes popIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.05);
-                opacity: 0.8;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
+        .btn-skip {
             color: var(--text-muted);
+            background: transparent;
+            border: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 6px 12px;
         }
 
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.2;
+        .btn-skip:hover {
+            color: #fff;
+        }
+
+        .btn-tour-nav {
+            background: var(--accent-cyan);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 7px 18px;
+            transition: all 0.2s;
+        }
+
+        .btn-tour-nav:hover {
+            background: #22d3ee;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Header -->
-    <div class="header">
+    <!-- Security Header -->
+    <header class="soc-header">
         <div class="container d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-                <a href="/" class="logo">
-                    <i class="fa-solid fa-shield-halved me-2"></i> VoiceShield
+            <div class="d-flex align-items-center gap-3">
+                <a href="/" class="brand-badge">
+                    <div class="brand-logo-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="brand-title">VoiceShield <span style="font-weight:300; opacity:0.6;">SOC</span></div>
+                        <div class="brand-sub">Neural Telephony Interceptor</div>
+                    </div>
                 </a>
-                <span class="text-white-50 mx-2">|</span>
-                <span style="color:var(--text-secondary); font-size:0.9rem;">Real-time Monitor</span>
             </div>
 
             <div class="d-flex align-items-center gap-3">
-                <div id="connectionStatus" class="status-pill status-disconnected">
-                    <i class="fas fa-circle me-2" style="font-size:0.6rem;"></i>
-                    <span id="statusText">Disconnected</span>
-                </div>
-                <div id="systemTime" style="color:var(--text-muted); font-family:monospace; font-size:1.1rem;">00:00:00
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container mt-4">
-        <!-- Control Panel -->
-        <div class="glass-panel">
-            <div class="text-center mb-3">
-                <h5 class="fw-bold mb-2">
-                    <i class="fas fa-microphone-alt me-2 text-primary"></i>
-                    Voice Detection Control
-                </h5>
-                <p class="text-muted small mb-3">Start recording from your microphone to detect phishing attempts</p>
-            </div>
-
-            <div id="recordingStatus" class="text-center mb-3" style="display: none;">
-                <div class="status-pill"
-                    style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-color); color: var(--warning-color); display: inline-flex; align-items: center; padding: 8px 20px; border-radius: 30px; animation: pulse 2s infinite;">
-                    <i class="fas fa-circle me-2" style="font-size:0.6rem;"></i>
-                    <span>🎙️ Recording Active</span>
-                </div>
-            </div>
-
-            <div class="d-flex flex-wrap justify-content-center gap-3">
-                <button id="startDetectionBtn" class="btn btn-lg px-4 py-3"
-                    style="background: linear-gradient(135deg, var(--success-color), #059669); color: white; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); transition: all 0.3s;">
-                    <i class="fas fa-microphone me-2"></i>
-                    <span>Live Mic Detection</span>
+                <button id="openTutorialBtn" class="btn-tutorial-trigger">
+                    <i class="fas fa-compass me-1"></i> How to Test / Guide
                 </button>
-                <button id="stopDetectionBtn" class="btn btn-lg px-4 py-3"
-                    style="background: linear-gradient(135deg, var(--danger-color), #dc2626); color: white; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3); display: none; transition: all 0.3s;">
-                    <i class="fas fa-stop-circle me-2"></i>
-                    <span>Stop Detection</span>
-                </button>
-                <button id="demoScamBtn" class="btn btn-lg px-4 py-3"
-                    style="background: linear-gradient(135deg, #ef4444, #991b1b); color: white; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4); transition: all 0.3s;">
-                    <i class="fas fa-shield-virus me-2"></i>
-                    <span>Demo: Bank Scam (Phishing)</span>
-                </button>
-                <button id="demoNormalBtn" class="btn btn-lg px-4 py-3"
-                    style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4); transition: all 0.3s;">
-                    <i class="fas fa-phone-volume me-2"></i>
-                    <span>Demo: Normal Call (Safe)</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="glass-panel">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="m-0 fw-bold">
-                    <i class="fas fa-wave-square me-2 text-primary"></i> Live Transcripts
-                    <span class="live-badge">LIVE</span>
-                </h5>
-                <button id="clearBtn" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                    <i class="fas fa-trash-alt me-1"></i> Clear
-                </button>
-            </div>
-
-            <div id="transcriptsContainer" class="transcript-container">
-                <div class="empty-state">
-                    <i class="fas fa-satellite-dish"></i>
-                    <h5>Waiting for Connection</h5>
-                    <p class="small">Click "Start Detection" to begin monitoring...</p>
+                <div id="connectionStatus" class="status-pill">
+                    <div id="pulseIndicator" class="pulse-dot"></div>
+                    <span id="statusText">System Armed</span>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Hidden Audio for Alerts -->
+    <main class="container">
+        <!-- Telemetry HUD -->
+        <div class="telemetry-bar">
+            <div class="telemetry-item">
+                <span>INTEL STATUS:</span>
+                <span class="value text-success"><i class="fas fa-satellite me-1"></i> ONLINE</span>
+            </div>
+            <div class="telemetry-item">
+                <span>ASR ENGINE:</span>
+                <span class="value">OpenAI Whisper (Tiny)</span>
+            </div>
+            <div class="telemetry-item">
+                <span>CLASSIFIER:</span>
+                <span class="value">DistilBERT INT8 Dynamic</span>
+            </div>
+            <div class="telemetry-item">
+                <span>LATENCY:</span>
+                <span class="value text-cyan">&lt; 85ms</span>
+            </div>
+            <div class="telemetry-item">
+                <span>TIMESTAMP:</span>
+                <span id="systemClock" class="value">--:--:-- UTC</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Operations Control Hub -->
+            <div class="col-lg-5">
+                <div class="soc-card" id="testControlCard">
+                    <div class="card-header-label">Operational Testing Suite</div>
+                    <h2 class="card-main-title">
+                        <i class="fas fa-vial-virus text-cyan"></i>
+                        Attack & Defense Simulator
+                    </h2>
+                    <p class="text-secondary small mb-3">
+                        Execute 1-click test scenarios to evaluate AI response without speaking into a microphone:
+                    </p>
+
+                    <div class="scenario-grid mb-4">
+                        <!-- 1-Click Scam Button -->
+                        <button id="demoScamBtn" class="action-card-btn btn-scam-attack">
+                            <div class="action-btn-title">
+                                <span><i class="fas fa-triangle-exclamation text-danger me-2"></i>Bank OTP Scam</span>
+                                <span class="action-btn-badge" style="background:rgba(255,42,95,0.2); color:#fda4af;">Attack</span>
+                            </div>
+                            <div class="action-btn-desc">
+                                Simulates an attacker posing as a bank fraud agent demanding a One-Time Password.
+                            </div>
+                        </button>
+
+                        <!-- 1-Click Safe Call Button -->
+                        <button id="demoNormalBtn" class="action-card-btn btn-normal-sim">
+                            <div class="action-btn-title">
+                                <span><i class="fas fa-check-shield text-info me-2"></i>Clean Business Call</span>
+                                <span class="action-btn-badge" style="background:rgba(6,182,212,0.2); color:#a5f3fc;">Legitimate</span>
+                            </div>
+                            <div class="action-btn-desc">
+                                Simulates normal corporate dialogue to verify zero false positives.
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="card-header-label mt-4">Hardware Sensor</div>
+                    <h2 class="card-main-title" style="font-size: 1.05rem;">
+                        <i class="fas fa-microphone-lines text-success"></i>
+                        Real Microphone Interception
+                    </h2>
+                    <p class="text-secondary small mb-3">
+                        Speak directly into your device to test live voice stream transcription and threat evaluation:
+                    </p>
+
+                    <button id="startDetectionBtn" class="action-card-btn btn-mic-record py-3">
+                        <div class="action-btn-title text-success">
+                            <span><i class="fas fa-circle-play me-2"></i>Arm Live Microphone</span>
+                            <span class="action-btn-badge" style="background:rgba(16,185,129,0.2); color:#6ee7b7;">Ready</span>
+                        </div>
+                        <div class="action-btn-desc">
+                            Begins continuous 3-second audio chunk streaming to the Whisper model.
+                        </div>
+                    </button>
+
+                    <button id="stopDetectionBtn" class="action-card-btn btn-mic-active py-3" style="display: none;">
+                        <div class="action-btn-title text-danger">
+                            <span><i class="fas fa-stop-circle me-2"></i>Disarm Microphone [Active]</span>
+                            <span class="action-btn-badge" style="background:#ff2a5f; color:#fff;">Live</span>
+                        </div>
+                        <div class="action-btn-desc">
+                            Stops hardware sensor and finalizes session intelligence summary.
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Stream Intelligence Feed -->
+            <div class="col-lg-7">
+                <div class="soc-card h-100" id="feedCard">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <div class="card-header-label">Telemetry Stream</div>
+                            <h2 class="card-main-title m-0">
+                                <i class="fas fa-radar text-cyan"></i>
+                                Live Intercepts & Intelligence
+                            </h2>
+                        </div>
+                        <button id="clearFeedBtn" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size: 0.78rem;">
+                            <i class="fas fa-eraser me-1"></i> Clear Feed
+                        </button>
+                    </div>
+
+                    <div id="transcriptsContainer" class="transcript-feed">
+                        <div class="feed-empty-state">
+                            <i class="fas fa-shield-virus"></i>
+                            <h6 class="text-white mb-1">Defense Grid Active</h6>
+                            <p class="small mb-0">No active calls detected. Click <strong>"Bank OTP Scam"</strong> above to inspect an attack stream.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Hidden Audio Alert for Sirens -->
     <audio id="phishingAlertAudio" preload="auto" style="display: none;">
         <source src="/static/phishing_alert.mp3" type="audio/mpeg">
         <source src="/static/phishing_alert.ogg" type="audio/ogg">
     </audio>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ========================================================
+         INTERACTIVE ONBOARDING TUTORIAL MODAL
+         ======================================================== -->
+    <div id="tutorialOverlay" class="tutorial-modal-overlay">
+        <div class="tutorial-card">
+            <button id="closeTourBtn" class="tutorial-close-btn" title="Close / Skip"><i class="fas fa-times"></i></button>
 
+            <span id="tourStepBadge" class="tutorial-step-badge">Step 1 of 4</span>
+            <h3 id="tourTitle" class="tutorial-title">Welcome to VoiceShield SOC</h3>
+            <p id="tourText" class="tutorial-text">
+                VoiceShield is an autonomous cybersecurity platform that listens to live telephone audio streams to detect voice phishing (vishing), impersonation attacks, and credential extortion before financial loss occurs.
+            </p>
+
+            <div id="tourHighlightBox" class="tutorial-feature-box">
+                <i class="fas fa-shield-halved text-cyan fs-4"></i>
+                <div>
+                    <strong>Autonomous Defense:</strong> Evaluates both speech semantics and deception patterns in under 100 milliseconds.
+                </div>
+            </div>
+
+            <div class="tutorial-footer">
+                <div class="tutorial-dots">
+                    <span class="dot-indicator active"></span>
+                    <span class="dot-indicator"></span>
+                    <span class="dot-indicator"></span>
+                    <span class="dot-indicator"></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button id="skipTourBtn" class="btn-skip">Skip Guide</button>
+                    <button id="nextTourBtn" class="btn-tour-nav">Next Step <i class="fas fa-arrow-right ms-1"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frontend Core Application Script -->
     <script>
-        class VoicePhishingMonitor {
+        class VoiceShieldApp {
             constructor() {
                 this.activeSockets = new Map();
-                this.stats = { chunksProcessed: 0, totalPhishingScore: 0 };
-
-                // Alert Config
-                this.speechSynthesis = window.speechSynthesis;
-                this.alertThreshold = 0.57;
-                this.lastAlertTime = 0;
-                this.alertCooldown = 5000;
-
-                // Microphone Recording
-                this.isRecording = false;
+                this.currentCallId = null;
                 this.mediaRecorder = null;
                 this.audioChunks = [];
-                this.currentCallId = null;
+                this.isRecording = false;
                 this.chunkNumber = 0;
                 this.recordingInterval = null;
+                this.lastAlertTime = 0;
+                this.alertCooldown = 4000;
 
-                this.initializeUI();
-                this.initializeVoiceAlert();
-                this.updateSystemTime();
-                setInterval(() => this.updateSystemTime(), 1000);
+                this.initUI();
+                this.initListeners();
+                this.initClock();
+                this.initAudioUnlock();
                 this.startAutoDiscovery();
-                this._setupInteractionToUnlockAudio();
+                this.initOnboarding();
+            }
 
-                // Control buttons
-                document.getElementById('startDetectionBtn').onclick = () => this.startDetection();
-                document.getElementById('stopDetectionBtn').onclick = () => this.stopDetection();
-                document.getElementById('demoScamBtn').onclick = () => this.runSimulation('scam');
-                document.getElementById('demoNormalBtn').onclick = () => this.runSimulation('normal');
+            initUI() {
+                this.setConnectionState('connected');
+            }
 
-                // Clear button
-                document.getElementById('clearBtn').onclick = () => {
-                    const container = document.getElementById('transcriptsContainer');
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-satellite-dish"></i>
-                            <h5>Monitoring Cleared</h5>
-                            <p class="small">Waiting for new voice data...</p>
-                        </div>
-                    `;
+            initClock() {
+                const update = () => {
+                    const now = new Date();
+                    document.getElementById('systemClock').textContent = 
+                        now.toISOString().substring(11, 19) + ' UTC';
                 };
+                update();
+                setInterval(update, 1000);
             }
 
-            initializeUI() {
-                this.updateConnectionStatus('connecting');
+            setConnectionState(state) {
+                const el = document.getElementById('connectionStatus');
+                const dot = document.getElementById('pulseIndicator');
+                const txt = document.getElementById('statusText');
+
+                if (state === 'connected') {
+                    dot.className = 'pulse-dot';
+                    txt.textContent = 'System Armed';
+                    txt.className = 'text-success';
+                } else {
+                    dot.className = 'pulse-dot disconnected';
+                    txt.textContent = 'Disconnected';
+                    txt.className = 'text-danger';
+                }
             }
 
-            updateSystemTime() {
-                const now = new Date();
-                document.getElementById('systemTime').textContent =
-                    now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            }
-
-            // --- Voice Alert System ---
-            initializeVoiceAlert() {
-                if (!this.speechSynthesis) console.warn('⚠️ Speech Synthesis not supported');
-                this.voiceSettings = { rate: 1.0, pitch: 1.0, volume: 1.0, lang: 'en-US' };
-            }
-
-            _setupInteractionToUnlockAudio() {
-                // Browsers block audio until user interaction. We try to unlock it on any click.
+            initAudioUnlock() {
                 const unlock = () => {
                     const audio = document.getElementById('phishingAlertAudio');
-                    audio.play().then(() => {
-                        audio.pause();
-                        audio.currentTime = 0;
-                        document.removeEventListener('click', unlock);
-                    }).catch(() => { });
+                    if (audio) {
+                        audio.play().then(() => {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            document.removeEventListener('click', unlock);
+                        }).catch(() => {});
+                    }
                 };
                 document.addEventListener('click', unlock);
             }
 
-            triggerVoiceAlert(phishingScore) {
-                const now = Date.now();
-                if (now - this.lastAlertTime < this.alertCooldown) return;
-                if (phishingScore < this.alertThreshold) return;
+            initListeners() {
+                // Simulation Buttons
+                document.getElementById('demoScamBtn').onclick = () => this.runSimulation('scam');
+                document.getElementById('demoNormalBtn').onclick = () => this.runSimulation('normal');
 
-                console.log(`🚨 ALERT TRIGGERED: ${(phishingScore * 100).toFixed(1)}%`);
+                // Hardware Mic Buttons
+                document.getElementById('startDetectionBtn').onclick = () => this.startHardwareMic();
+                document.getElementById('stopDetectionBtn').onclick = () => this.stopHardwareMic();
 
-                const alertAudio = document.getElementById('phishingAlertAudio');
-
-                // Play Audio
-                if (alertAudio) {
-                    alertAudio.currentTime = 0;
-                    alertAudio.play().catch(e => console.warn('Audio blocked:', e));
-                }
-
-                // Visual Alert
-                this.showVisualAlert((phishingScore * 100).toFixed(1));
-                this.lastAlertTime = now;
-            }
-
-            showVisualAlert(score) {
-                const overlay = document.createElement('div');
-                overlay.className = 'phishing-alert-overlay';
-                overlay.innerHTML = `
-                    <div class="alert-card">
-                        <div class="alert-icon-lg"><i class="fas fa-triangle-exclamation"></i></div>
-                        <h2 class="text-danger fw-bold mb-2">PHISHING DETECTED</h2>
-                        <h1 class="display-4 fw-bold text-white mb-3">${score}%</h1>
-                        <p class="text-white-50 mb-0">High probability of fraudulent activity.<br>Terminate call immediately.</p>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-                setTimeout(() => overlay.remove(), 5000);
-            }
-
-            // --- Connection & Data ---
-            updateConnectionStatus(status) {
-                const el = document.getElementById('connectionStatus');
-                const txt = document.getElementById('statusText');
-
-                el.className = `status-pill status-${status}`;
-                if (status === 'connected') txt.textContent = 'System Online';
-                else if (status === 'connecting') txt.textContent = 'Searching...';
-                else txt.textContent = 'Offline';
-            }
-
-            async startAutoDiscovery() {
-                setInterval(async () => {
-                    try {
-                        const res = await fetch('/active_calls');
-                        if (res.ok) {
-                            const data = await res.json();
-                            this.updateConnectionStatus('connected');
-                            this.handleActiveCalls(data.active_calls);
-                        } else {
-                            this.updateConnectionStatus('disconnected');
-                        }
-                    } catch (e) {
-                        this.updateConnectionStatus('disconnected');
-                    }
-                }, 2000);
-            }
-
-            handleActiveCalls(activeCalls) {
-                for (const [callId] of Object.entries(activeCalls)) {
-                    if (!this.activeSockets.has(callId)) this.connectToCall(callId);
-                }
-                for (const [callId, socket] of this.activeSockets.entries()) {
-                    if (!activeCalls[callId]) {
-                        socket.close();
-                        this.activeSockets.delete(callId);
-                    }
-                }
-            }
-
-            connectToCall(callId) {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/call_monitoring/${callId}`);
-                ws.onopen = () => this.activeSockets.set(callId, ws);
-                ws.onmessage = (e) => {
-                    try {
-                        const data = JSON.parse(e.data);
-                        if (data.type === 'analysis_update') this.addTranscriptItem(data);
-                    } catch (err) { console.error(err); }
+                // Clear feed
+                document.getElementById('clearFeedBtn').onclick = () => {
+                    const container = document.getElementById('transcriptsContainer');
+                    container.innerHTML = `
+                        <div class="feed-empty-state">
+                            <i class="fas fa-shield-virus"></i>
+                            <h6 class="text-white mb-1">Defense Grid Cleared</h6>
+                            <p class="small mb-0">Waiting for incoming voice streams...</p>
+                        </div>
+                    `;
                 };
-                ws.onclose = () => this.activeSockets.delete(callId);
-                ws.onerror = () => this.activeSockets.delete(callId);
+
+                // Tutorial open trigger
+                document.getElementById('openTutorialBtn').onclick = () => this.showOnboarding(true);
             }
 
+            // --- 1-Click Simulation Runner ---
             async runSimulation(scenario) {
-                const btnId = scenario === 'scam' ? 'demoScamBtn' : 'demoNormalBtn';
-                const btn = document.getElementById(btnId);
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> Analyzing AI...`;
+                const btn = document.getElementById(scenario === 'scam' ? 'demoScamBtn' : 'demoNormalBtn');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `<div class="d-flex align-items-center gap-2 text-warning"><i class="fas fa-spinner fa-spin"></i><span>Analyzing Audio via Whisper & DistilBERT...</span></div>`;
                 btn.disabled = true;
 
                 try {
@@ -656,87 +950,31 @@
                     console.error('Simulation error:', err);
                     alert('Network error during simulation');
                 } finally {
-                    btn.innerHTML = originalHtml;
+                    btn.innerHTML = originalContent;
                     btn.disabled = false;
                 }
             }
 
-            addTranscriptItem(data) {
-                const container = document.getElementById('transcriptsContainer');
-                // Remove empty state if present
-                if (container.querySelector('.empty-state')) container.innerHTML = '';
-
-                const score = data.phishing_score;
-                const scorePct = (score * 100).toFixed(1);
-
-                let riskLevel = 'low';
-                let barColor = 'bg-success';
-                let riskText = 'Safe (Legitimate)';
-
-                if (score >= 0.6) { riskLevel = 'high'; barColor = 'bg-danger'; riskText = 'CRITICAL PHISHING RISK'; }
-                else if (score >= 0.3) { riskLevel = 'medium'; barColor = 'bg-warning'; riskText = 'Suspicious Call'; }
-
-                // High-risk keyword triggers
-                const keywords = ['otp', 'one time password', 'password', 'fraud team', 'fraud', 'suspicious activity', 'verify your identity', 'verify', 'akmi banks', 'bank', 'account'];
-                let highlighted = data.transcript;
-                keywords.forEach(word => {
-                    const re = new RegExp(`(${word})`, 'gi');
-                    highlighted = highlighted.replace(re, '<mark style="background:rgba(239,68,68,0.3); color:#fca5a5; font-weight:700; border-radius:4px; padding:1px 4px;">$1</mark>');
-                });
-
-                const div = document.createElement('div');
-                div.className = `transcript-item risk-${riskLevel}`;
-                div.innerHTML = `
-                    <div class="transcript-header">
-                        <span><i class="fas fa-phone-alt me-1"></i> ${data.call_id}</span>
-                        <span>${new Date(data.timestamp * 1000).toLocaleTimeString()}</span>
-                    </div>
-                    <div class="transcript-text">"${highlighted}"</div>
-                    <div class="risk-meter">
-                        <div class="risk-label risk-${riskLevel}">${riskText}</div>
-                        <div class="progress-track">
-                            <div class="progress-fill ${barColor}" style="width: ${scorePct}%"></div>
-                        </div>
-                        <div class="risk-label text-end text-white">${scorePct}%</div>
-                    </div>
-                `;
-
-                container.insertBefore(div, container.firstChild);
-
-                // Keep buffer size managed
-                if (container.children.length > 50) container.lastChild.remove();
-
-                this.triggerVoiceAlert(score);
-            }
-
-            // --- Microphone Recording Methods ---
-            async startDetection() {
+            // --- Real Hardware Microphone Handling ---
+            async startHardwareMic() {
                 try {
-                    // Request microphone access
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-                    // Generate call ID
-                    this.currentCallId = `call_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}`;
+                    this.currentCallId = `call_${Date.now().toString(36)}`;
                     this.chunkNumber = 0;
 
-                    // Initialize call monitoring on backend
                     await fetch('/start_call_monitoring/', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: `call_id=${this.currentCallId}`
                     });
 
-                    // Connect WebSocket for this call
                     this.connectToCall(this.currentCallId);
 
-                    // Start recording
                     this.mediaRecorder = new MediaRecorder(stream);
                     this.audioChunks = [];
 
-                    this.mediaRecorder.ondataavailable = (event) => {
-                        if (event.data.size > 0) {
-                            this.audioChunks.push(event.data);
-                        }
+                    this.mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) this.audioChunks.push(e.data);
                     };
 
                     this.mediaRecorder.onstop = async () => {
@@ -746,7 +984,6 @@
                         }
                     };
 
-                    // Record in 3-second chunks (more responsive)
                     this.mediaRecorder.start();
                     this.recordingInterval = setInterval(() => {
                         if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
@@ -755,42 +992,28 @@
                         }
                     }, 3000);
 
-                    // Update UI
                     this.isRecording = true;
                     document.getElementById('startDetectionBtn').style.display = 'none';
-                    document.getElementById('stopDetectionBtn').style.display = 'inline-block';
-                    document.getElementById('recordingStatus').style.display = 'block';
-
-                    console.log('✅ Detection started:', this.currentCallId);
-                } catch (error) {
-                    console.error('❌ Failed to start detection:', error);
-                    alert('Failed to access microphone. Please grant permission and try again.');
+                    document.getElementById('stopDetectionBtn').style.display = 'block';
+                } catch (err) {
+                    console.error('Microphone error:', err);
+                    alert('Microphone access denied. Please grant permission in browser settings.');
                 }
             }
 
-            async stopDetection() {
-                // Stop recording
+            async stopHardwareMic() {
                 if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
                     this.mediaRecorder.stop();
                 }
-
-                if (this.recordingInterval) {
-                    clearInterval(this.recordingInterval);
-                }
-
-                // Stop all tracks
+                if (this.recordingInterval) clearInterval(this.recordingInterval);
                 if (this.mediaRecorder && this.mediaRecorder.stream) {
-                    this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
                 }
-
-                // Close WebSocket for this call
                 if (this.currentCallId && this.activeSockets.has(this.currentCallId)) {
-                    const ws = this.activeSockets.get(this.currentCallId);
-                    ws.close();
+                    this.activeSockets.get(this.currentCallId).close();
                     this.activeSockets.delete(this.currentCallId);
                 }
 
-                // Finalize call
                 if (this.currentCallId) {
                     await fetch('/finalize_call/', {
                         method: 'POST',
@@ -799,13 +1022,9 @@
                     });
                 }
 
-                // Update UI
                 this.isRecording = false;
-                document.getElementById('startDetectionBtn').style.display = 'inline-block';
+                document.getElementById('startDetectionBtn').style.display = 'block';
                 document.getElementById('stopDetectionBtn').style.display = 'none';
-                document.getElementById('recordingStatus').style.display = 'none';
-
-                console.log('✅ Detection stopped');
             }
 
             async sendChunkToBackend() {
@@ -820,20 +1039,255 @@
                         method: 'POST',
                         body: formData
                     });
-
                     if (response.ok) {
-                        const result = await response.json();
-                        console.log(`📊 Chunk ${this.chunkNumber} processed:`, result);
                         this.chunkNumber++;
                     }
-                } catch (error) {
-                    console.error('❌ Error sending chunk:', error);
+                } catch (err) {
+                    console.error('Upload chunk error:', err);
                 }
+            }
+
+            // --- WebSocket Call Monitoring ---
+            connectToCall(callId) {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/call_monitoring/${callId}`);
+                ws.onopen = () => this.activeSockets.set(callId, ws);
+                ws.onmessage = (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'analysis_update') this.addTranscriptItem(data);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                };
+                ws.onclose = () => this.activeSockets.delete(callId);
+                ws.onerror = () => this.activeSockets.delete(callId);
+            }
+
+            async startAutoDiscovery() {
+                setInterval(async () => {
+                    try {
+                        const res = await fetch('/active_calls/');
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.setConnectionState('connected');
+                            for (const [callId] of Object.entries(data.active_calls || {})) {
+                                if (!this.activeSockets.has(callId)) this.connectToCall(callId);
+                            }
+                        }
+                    } catch (e) {
+                        this.setConnectionState('disconnected');
+                    }
+                }, 3000);
+            }
+
+            // --- Feed Rendering & Threat Classification ---
+            addTranscriptItem(data) {
+                const container = document.getElementById('transcriptsContainer');
+                if (container.querySelector('.feed-empty-state')) {
+                    container.innerHTML = '';
+                }
+
+                const score = data.phishing_score;
+                const scorePct = (score * 100).toFixed(1);
+
+                let threatClass = 'threat-safe';
+                let threatLabel = 'CLEAN CONVERSATION';
+                let fillColor = 'var(--threat-safe)';
+
+                if (score >= 0.6) {
+                    threatClass = 'threat-critical';
+                    threatLabel = 'CRITICAL PHISHING INTERCEPT';
+                    fillColor = 'var(--threat-critical)';
+                } else if (score >= 0.3) {
+                    threatClass = 'threat-suspicious';
+                    threatLabel = 'SUSPICIOUS TELEPHONY PATTERN';
+                    fillColor = 'var(--threat-suspicious)';
+                }
+
+                // Entity & Keyword highlighting
+                const keywords = [
+                    'otp', 'one time password', 'password', 'fraud team', 'fraud', 
+                    'suspicious activity', 'verify your identity', 'verify', 'akmi banks', 
+                    'akmi bank', 'bank', 'account', 'credit card', 'cvv'
+                ];
+
+                let highlightedText = data.transcript;
+                let tags = [];
+
+                keywords.forEach(word => {
+                    const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+                    if (regex.test(highlightedText)) {
+                        highlightedText = highlightedText.replace(regex, '<mark class="threat-keyword">$1</mark>');
+                        tags.push(word.toUpperCase());
+                    }
+                });
+
+                const uniqueTags = [...new Set(tags)];
+
+                const entry = document.createElement('div');
+                entry.className = `feed-entry ${threatClass}`;
+                entry.innerHTML = `
+                    <div class="entry-meta">
+                        <span><i class="fas fa-fingerprint me-1 text-cyan"></i>${data.call_id}</span>
+                        <span>${new Date(data.timestamp * 1000).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="entry-transcript">"${highlightedText}"</div>
+
+                    ${uniqueTags.length > 0 ? `
+                        <div class="threat-tags-list">
+                            ${uniqueTags.map(t => `<span class="threat-intel-tag"><i class="fas fa-biohazard"></i> FLAG: ${t}</span>`).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="risk-gauge-container">
+                        <span class="small font-monospace" style="color:${fillColor}; font-weight:600;">
+                            ${threatLabel}
+                        </span>
+                        <div class="risk-progress-bar">
+                            <div class="risk-progress-fill" style="width: ${scorePct}%; background: ${fillColor};"></div>
+                        </div>
+                        <span class="risk-score-label" style="color: ${fillColor};">${scorePct}%</span>
+                    </div>
+                `;
+
+                container.insertBefore(entry, container.firstChild);
+                if (container.children.length > 40) container.lastChild.remove();
+
+                if (score >= 0.6) {
+                    this.triggerSirenAlert(scorePct);
+                }
+            }
+
+            triggerSirenAlert(scorePct) {
+                const now = Date.now();
+                if (now - this.lastAlertTime < this.alertCooldown) return;
+                this.lastAlertTime = now;
+
+                const audio = document.getElementById('phishingAlertAudio');
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {});
+                }
+
+                // Modal Banner
+                const overlay = document.createElement('div');
+                overlay.className = 'phishing-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="siren-box">
+                        <i class="fas fa-triangle-exclamation text-danger mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold text-danger mb-1">CRITICAL PHISHING ATTACK DETECTED</h3>
+                        <div class="display-5 fw-bold text-white font-monospace my-2">${scorePct}%</div>
+                        <p class="text-secondary small mb-4">
+                            Attacker attempted unauthorized OTP and account credential harvesting. High confidence fraud match.
+                        </p>
+                        <button class="btn btn-danger px-4 py-2 font-monospace" onclick="this.closest('.phishing-modal-overlay').remove()">
+                            DISMISS ALERT
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                setTimeout(() => {
+                    if (document.body.contains(overlay)) overlay.remove();
+                }, 5000);
+            }
+
+            // ========================================================
+            // INTERACTIVE ONBOARDING TUTORIAL LOGIC
+            // ========================================================
+            initOnboarding() {
+                this.currentStep = 0;
+                this.tourSteps = [
+                    {
+                        stepBadge: "Step 1 of 4: Overview",
+                        title: "Welcome to VoiceShield SOC",
+                        text: "VoiceShield is an enterprise-grade AI telephony interceptor that neutralizes voice phishing (vishing), social engineering, and bank fraud before financial damage occurs.",
+                        icon: "fa-shield-halved",
+                        boxText: "Powered by OpenAI Whisper ASR and a fine-tuned DistilBERT transformer running quantized in under 100ms."
+                    },
+                    {
+                        stepBadge: "Step 2 of 4: Evaluator Quick-Test",
+                        title: "1-Click Attack & Defense Simulation",
+                        text: "Want to test without a microphone? Click 'Bank OTP Scam' to simulate an active cyber criminal attempting to steal a one-time password.",
+                        icon: "fa-vial-virus",
+                        boxText: "No setup required! Evaluates real pre-recorded audio scenarios instantly."
+                    },
+                    {
+                        stepBadge: "Step 3 of 4: Real Hardware Testing",
+                        title: "Live Microphone Interceptor",
+                        text: "Want to test your own voice? Click 'Arm Live Microphone'. VoiceShield continuously captures 3-second audio slices and streams them to the model.",
+                        icon: "fa-microphone-lines",
+                        boxText: "Try saying: 'Hello, this is your bank fraud department, please verify your OTP code'."
+                    },
+                    {
+                        stepBadge: "Step 4 of 4: Threat Intelligence Feed",
+                        title: "Threat Gauges & Acoustic Alarms",
+                        text: "Watch the Live Feed on the right. When an attack is detected, threat indicators flash red, suspicious keywords are extracted, and an audible acoustic siren sounds.",
+                        icon: "fa-radar",
+                        boxText: "You are now ready to operate VoiceShield SOC. Happy hunting!"
+                    }
+                ];
+
+                document.getElementById('nextTourBtn').onclick = () => this.nextTourStep();
+                document.getElementById('skipTourBtn').onclick = () => this.closeTour();
+                document.getElementById('closeTourBtn').onclick = () => this.closeTour();
+
+                // Check if user has seen tour
+                const seen = localStorage.getItem('voiceshield_soc_tour_seen');
+                if (!seen) {
+                    setTimeout(() => this.showOnboarding(false), 600);
+                }
+            }
+
+            showOnboarding(manualOpen) {
+                this.currentStep = 0;
+                this.renderTourStep();
+                document.getElementById('tutorialOverlay').classList.add('active');
+            }
+
+            renderTourStep() {
+                const step = this.tourSteps[this.currentStep];
+                document.getElementById('tourStepBadge').textContent = step.stepBadge;
+                document.getElementById('tourTitle').textContent = step.title;
+                document.getElementById('tourText').textContent = step.text;
+
+                document.getElementById('tourHighlightBox').innerHTML = `
+                    <i class="fas ${step.icon} text-cyan fs-4"></i>
+                    <div>${step.boxText}</div>
+                `;
+
+                // Update dots
+                const dots = document.querySelectorAll('.dot-indicator');
+                dots.forEach((d, idx) => {
+                    if (idx === this.currentStep) d.classList.add('active');
+                    else d.classList.remove('active');
+                });
+
+                const nextBtn = document.getElementById('nextTourBtn');
+                if (this.currentStep === this.tourSteps.length - 1) {
+                    nextBtn.innerHTML = `Start Testing <i class="fas fa-check ms-1"></i>`;
+                } else {
+                    nextBtn.innerHTML = `Next Step <i class="fas fa-arrow-right ms-1"></i>`;
+                }
+            }
+
+            nextTourStep() {
+                if (this.currentStep < this.tourSteps.length - 1) {
+                    this.currentStep++;
+                    this.renderTourStep();
+                } else {
+                    this.closeTour();
+                }
+            }
+
+            closeTour() {
+                document.getElementById('tutorialOverlay').classList.remove('active');
+                localStorage.setItem('voiceshield_soc_tour_seen', 'true');
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            new VoicePhishingMonitor();
+            window.voiceShield = new VoiceShieldApp();
         });
     </script>
 </body>
